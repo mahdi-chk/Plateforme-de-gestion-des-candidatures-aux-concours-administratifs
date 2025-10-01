@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des utilisateurs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .page-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--bleu-mef);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .badge-centre {
+            background-color: #6c757d;
+            color: white;
+            margin: 2px;
+            font-size: 0.75em;
+        }
+
+        .centres-list {
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <h2><i class="fas fa-users me-2"></i>Gestion des utilisateurs</h2>
+
+    <form class="row mb-4" method="get" th:action="@{/admin/gestion-utilisateurs/list}">
+        <div class="col-md-4">
+            <input type="text" name="username" class="form-control" placeholder="Nom d'utilisateur" th:value="${username}">
+        </div>
+        <div class="col-md-4">
+            <select name="role" class="form-select">
+                <option value="">-- Tous les rôles --</option>
+                <option value="ROLE_ADMIN" th:selected="${role == 'ROLE_ADMIN'}">Administrateur</option>
+                <option value="ROLE_GESTIONNAIRE_GLOBAL" th:selected="${role == 'ROLE_GESTIONNAIRE_GLOBAL'}">Gestionnaire Global</option>
+                <option value="ROLE_GESTIONNAIRE_LOCAL" th:selected="${role == 'ROLE_GESTIONNAIRE_LOCAL'}">Gestionnaire Local</option>
+                <option value="ROLE_CANDIDAT" th:selected="${role == 'ROLE_CANDIDAT'}">Candidat</option>
+            </select>
+        </div>
+        <div class="col-md-4 d-flex">
+            <button class="btn btn-primary me-2" type="submit">
+                <i class="fas fa-search me-1"></i> Rechercher
+            </button>
+            <a th:href="@{/admin/gestion-utilisateurs/add}" class="btn btn-success">
+                <i class="fas fa-user-plus me-1"></i> Nouvel utilisateur
+            </a>
+        </div>
+    </form>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>ID</th>
+                <th>Nom d'utilisateur</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Centres affectés</th>
+                <th>Activé</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${utilisateurs.content}" th:if="${utilisateurs.hasContent()}">
+                <td th:text="${user.id}">1</td>
+                <td th:text="${user.username}">admin</td>
+                <td th:text="${user.email}">admin@example.com</td>
+                <td>
+                    <th:block th:if="${user.role != null}">
+                        <span th:switch="${user.role.name()}">
+                            <span th:case="'ROLE_ADMIN'" class="badge bg-danger">Administrateur</span>
+                            <span th:case="'ROLE_GESTIONNAIRE_GLOBAL'" class="badge bg-primary">Gestionnaire Global</span>
+                            <span th:case="'ROLE_GESTIONNAIRE_LOCAL'" class="badge bg-info">Gestionnaire Local</span>
+                            <span th:case="'ROLE_CANDIDAT'" class="badge bg-secondary">Candidat</span>
+                            <span th:case="*" class="badge bg-warning" th:text="${user.role.name()}">Autre</span>
+                        </span>
+                    </th:block>
+                    <th:block th:unless="${user.role != null}">
+                        <span class="badge bg-warning">Non défini</span>
+                    </th:block>
+                </td>
+                <td class="centres-list">
+                    <th:block th:if="${user.role != null and user.role.name() == 'ROLE_GESTIONNAIRE_LOCAL'}">
+                        <th:block th:if="${user.centresAffectes != null and !user.centresAffectes.empty}">
+                            <span th:each="centre : ${user.centresAffectes}" class="badge badge-centre d-inline-block text-truncate"
+                                  style="max-width: 120px;"
+                                  th:title="${centre.code + ' - ' + centre.villeNom}"
+                                  th:text="${centre.villeNom}"></span>
+                        </th:block>
+                        <th:block th:unless="${user.centresAffectes != null and !user.centresAffectes.empty}">
+                            <span class="text-muted">Aucun centre</span>
+                        </th:block>
+                    </th:block>
+                    <th:block th:unless="${user.role != null and user.role.name() == 'ROLE_GESTIONNAIRE_LOCAL'}">
+                        <span class="text-muted">-</span>
+                    </th:block>
+                </td>
+                <td>
+                    <span th:text="${user.enabled} ? 'Oui' : 'Non'"
+                          th:classappend="${user.enabled} ? 'text-success fw-bold' : 'text-danger fw-bold'"></span>
+                </td>
+                <td>
+                    <a th:href="@{'/admin/utilisateurs/edit/' + ${user.id}}" class="btn btn-sm btn-outline-primary me-1">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form th:action="@{'/admin/utilisateurs/delete/' + ${user.id}}" method="post" class="d-inline"
+                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:unless="${utilisateurs.hasContent()}">
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="fas fa-users fa-2x mb-2"></i><br>
+                    Aucun utilisateur trouvé
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${utilisateurs.totalPages > 1}" aria-label="Navigation des pages">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${utilisateurs.first} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/gestion-utilisateurs/list(page=${currentPage - 1}, username=${username}, role=${role})}">
+                    Précédent
+                </a>
+            </li>
+
+            <li th:each="i : ${#numbers.sequence(0, utilisateurs.totalPages - 1)}"
+                class="page-item" th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/admin/gestion-utilisateurs/list(page=${i}, username=${username}, role=${role})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${utilisateurs.last} ? 'disabled'">
+                <a class="page-link" th:href="@{/admin/gestion-utilisateurs/list(page=${currentPage + 1}, username=${username}, role=${role})}">
+                    Suivant
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="text-center mt-4">
+        <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

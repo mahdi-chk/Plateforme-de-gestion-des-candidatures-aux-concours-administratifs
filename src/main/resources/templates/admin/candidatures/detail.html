@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails de la candidature - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .page-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--bleu-mef), #007bff);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .content-section {
+            padding: 30px;
+        }
+
+        .info-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--bleu-mef);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .status-badge {
+            font-size: 1.1em;
+            padding: 12px 20px;
+            border-radius: 25px;
+        }
+
+        .document-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .document-item:hover {
+            border-color: var(--bleu-mef);
+            box-shadow: 0 2px 8px rgba(0, 86, 179, 0.1);
+        }
+
+        .action-buttons {
+            position: sticky;
+            bottom: 0;
+            background-color: white;
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            margin-top: 30px;
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <!-- En-tête -->
+    <div class="header-section">
+        <h1><i class="fas fa-file-alt me-3"></i>Détails de la candidature</h1>
+        <h2 class="mb-0" th:text="${candidature.numero}">CAND-20250827-A1B2</h2>
+    </div>
+
+    <!-- Messages d'alerte -->
+    <div class="content-section">
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Statut de la candidature -->
+        <div class="text-center mb-4">
+                <span class="badge status-badge"
+                      th:classappend="${candidature.statut.name() == 'VALIDEE'} ? 'bg-success' :
+                                     (${candidature.statut.name() == 'REJETEE'} ? 'bg-danger' : 'bg-warning text-dark')"
+                      th:switch="${candidature.statut.name()}">
+                    <span th:case="'EN_ATTENTE'">
+                        <i class="fas fa-clock me-2"></i>En attente de traitement
+                    </span>
+                    <span th:case="'VALIDEE'">
+                        <i class="fas fa-check me-2"></i>Candidature validée
+                    </span>
+                    <span th:case="'REJETEE'">
+                        <i class="fas fa-times me-2"></i>Candidature rejetée
+                    </span>
+                </span>
+        </div>
+
+        <div class="row">
+            <!-- Informations du candidat -->
+            <div class="col-md-6">
+                <div class="info-card">
+                    <h5><i class="fas fa-user me-2 text-primary"></i>Informations personnelles</h5>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Nom complet :</strong></td>
+                            <td th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}">
+                                Mahdi Chakouch
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>CIN :</strong></td>
+                            <td th:text="${candidature.candidatCin}">BK123456</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email :</strong></td>
+                            <td>
+                                <a th:href="'mailto:' + ${candidature.candidatEmail}"
+                                   th:text="${candidature.candidatEmail}">
+                                    mahdi@example.com
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Téléphone :</strong></td>
+                            <td th:text="${candidature.candidatTelephone}">0612345678</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diplôme :</strong></td>
+                            <td th:text="${candidature.candidatDiplome}">Master en Comptabilité</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Informations du concours -->
+            <div class="col-md-6">
+                <div class="info-card">
+                    <h5><i class="fas fa-trophy me-2 text-primary"></i>Informations du concours</h5>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Concours :</strong></td>
+                            <td th:text="${candidature.concoursTitre}">Concours Attaché</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Référence :</strong></td>
+                            <td th:text="${candidature.concoursReference}">CONC-2025-001</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Spécialité :</strong></td>
+                            <td>
+                                <span th:text="${candidature.specialiteLibelle}">Comptabilité</span>
+                                <small class="text-muted">(<span th:text="${candidature.specialiteCode}">COMPT</span>)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Centre d'examen :</strong></td>
+                            <td>
+                                <span th:text="${candidature.centreVille}">Rabat</span>
+                                <small class="text-muted">(<span th:text="${candidature.centreCode}">RAB-01</span>)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date de dépôt :</strong></td>
+                            <td th:text="${#temporals.format(candidature.dateDepot, 'dd/MM/yyyy')}">27/08/2025</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="info-card">
+            <h5><i class="fas fa-paperclip me-2 text-primary"></i>Documents fournis</h5>
+            <div th:if="${candidature.documents != null and !candidature.documents.empty}">
+                <div class="row">
+                    <!-- Afficher maximum 3 documents -->
+                    <div class="col-md-4" th:each="document, iterStat : ${candidature.documents}" th:if="${iterStat.index < 3}">
+                        <div class="document-item text-center">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <h6 th:text="${document.type.name()}">CV</h6>
+                            <p class="mb-2">
+                                <strong th:text="${document.nom}">cv_candidat.pdf</strong>
+                            </p>
+                            <p class="text-muted small">
+                                Taille: <span th:text="${document.tailleFormatee}">2.5 MB</span><br>
+                                Uploadé le: <span th:text="${#temporals.format(document.dateUpload, 'dd/MM/yyyy HH:mm')}">27/08/2025 14:30</span>
+                            </p>
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{'/documents/public/view/' + ${document.id}}"
+                                   class="btn btn-outline-primary" target="_blank">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                                <a th:href="@{'/documents/download/' + ${document.id}}"
+                                   class="btn btn-outline-success">
+                                    <i class="fas fa-download me-1"></i>Télécharger
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations de traitement -->
+        <div class="info-card" th:if="${candidature.utilisateurTraitant != null}">
+            <h5><i class="fas fa-user-cog me-2 text-primary"></i>Informations de traitement</h5>
+            <table class="table table-sm table-borderless">
+                <tr>
+                    <td><strong>Traité par :</strong></td>
+                    <td th:text="${candidature.utilisateurTraitant}">admin</td>
+                </tr>
+                <tr>
+                    <td><strong>Préférences de notification :</strong></td>
+                    <td>
+                            <span class="badge bg-info" th:switch="${candidature.notifications.name()}">
+                                <span th:case="'EMAIL'">Email uniquement</span>
+                                <span th:case="'SMS'">SMS uniquement</span>
+                                <span th:case="'LES_DEUX'">Email et SMS</span>
+                            </span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Actions de traitement (uniquement pour candidatures en attente) -->
+        <div class="info-card" th:if="${candidature.statut.name() == 'EN_ATTENTE'}">
+            <h5><i class="fas fa-tasks me-2 text-primary"></i>Actions de traitement</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-success btn-lg w-100"
+                            data-bs-toggle="modal" data-bs-target="#modalValider">
+                        <i class="fas fa-check me-2"></i>Valider la candidature
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-danger btn-lg w-100"
+                            data-bs-toggle="modal" data-bs-target="#modalRejeter">
+                        <i class="fas fa-times me-2"></i>Rejeter la candidature
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="action-buttons">
+        <div class="d-flex justify-content-between">
+            <div>
+                <a th:href="@{/admin/candidatures/list}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de validation -->
+<div class="modal fade" id="modalValider" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-check me-2"></i>Confirmer la validation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                </div>
+                <p class="text-center">
+                    Êtes-vous sûr de vouloir <strong>valider</strong> la candidature de
+                    <strong th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}"></strong> ?
+                </p>
+                <p class="text-muted small text-center">
+                    Le candidat sera automatiquement notifié par email de cette validation.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form th:action="@{'/admin/candidatures/valider/' + ${candidature.numero}}"
+                      method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Confirmer la validation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de rejet -->
+<div class="modal fade" id="modalRejeter" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-times me-2"></i>Rejeter la candidature</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{'/admin/candidatures/rejeter/' + ${candidature.numero}}" method="post">
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                    </div>
+                    <p class="text-center">
+                        Candidature de <strong th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}"></strong>
+                    </p>
+                    <div class="mb-3">
+                        <label for="motif" class="form-label">Motif du rejet <span class="text-danger">*</span></label>
+                        <textarea name="motif" id="motif" class="form-control" rows="4"
+                                  placeholder="Veuillez indiquer clairement le motif du rejet. Cette information sera communiquée au candidat."
+                                  required></textarea>
+                        <div class="form-text">
+                            Le candidat recevra ce motif par email. Soyez précis et professionnel.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Confirmer le rejet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    function confirmerSuppression() {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?\n\nCette action est irréversible et supprimera également tous les documents associés.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = event.target.dataset.url;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // Auto-dismiss des alertes
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
+</body>
+</html>

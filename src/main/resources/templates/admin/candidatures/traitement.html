@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier la candidature - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .page-container {
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-title {
+            color: var(--bleu-mef);
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--bleu-mef);
+            padding-bottom: 15px;
+        }
+
+        .form-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--bleu-mef);
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+            color: white;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .required::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .candidate-info {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    <h1 class="page-title">
+        <i class="fas fa-edit me-3"></i>Modifier la candidature
+    </h1>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Informations du candidat (lecture seule) -->
+    <div class="candidate-info">
+        <h5 class="mb-3"><i class="fas fa-user me-2"></i>Informations du candidat</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Nom complet :</strong> <span th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}">Mahdi Chakouch</span></p>
+                <p><strong>CIN :</strong> <span th:text="${candidature.candidatCin}">BK123456</span></p>
+                <p><strong>Email :</strong> <span th:text="${candidature.candidatEmail}">mahdi@example.com</span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Téléphone :</strong> <span th:text="${candidature.candidatTelephone}">0612345678</span></p>
+                <p><strong>Diplôme :</strong> <span th:text="${candidature.candidatDiplome}">Master en Comptabilité</span></p>
+                <p><strong>Date de dépôt :</strong> <span th:text="${#temporals.format(candidature.dateDepot, 'dd/MM/yyyy')}">27/08/2025</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'édition -->
+    <form th:action="@{'/admin/candidatures/edit/' + ${candidature.numero}}"
+          method="post" th:object="${candidature}">
+
+        <!-- Informations du concours -->
+        <div class="form-section">
+            <h5 class="mb-4"><i class="fas fa-trophy me-2 text-primary"></i>Informations du concours</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="concoursId" class="form-label required">Concours</label>
+                    <select class="form-select" id="concoursId" name="concoursId" required>
+                        <option value="">Sélectionner un concours</option>
+                        <option th:each="concours : ${concours}"
+                                th:value="${concours.id}"
+                                th:text="${concours.titre + ' (' + concours.reference + ')'}"
+                                th:selected="${concours.id == candidature.concoursId}">
+                        </option>
+                    </select>
+                    <div class="form-text">Concours pour lequel le candidat postule</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="specialiteId" class="form-label required">Spécialité</label>
+                    <select class="form-select" id="specialiteId" name="specialiteId" required>
+                        <option value="">Sélectionner une spécialité</option>
+                        <option th:each="specialite : ${specialites}"
+                                th:value="${specialite.id}"
+                                th:text="${specialite.libelle + ' (' + specialite.code + ')'}"
+                                th:selected="${specialite.id == candidature.specialiteId}">
+                        </option>
+                    </select>
+                    <div class="form-text">Spécialité choisie par le candidat</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Centre d'examen et statut -->
+        <div class="form-section">
+            <h5 class="mb-4"><i class="fas fa-map-marker-alt me-2 text-primary"></i>Centre d'examen et statut</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="centreId" class="form-label required">Centre d'examen</label>
+                    <select class="form-select" id="centreId" name="centreId" required>
+                        <option value="">Sélectionner un centre</option>
+                        <option th:each="centre : ${centres}"
+                                th:value="${centre.id}"
+                                th:text="${centre.villeNom + ' - ' + centre.code}"
+                                th:selected="${centre.id == candidature.centreId}">
+                        </option>
+                    </select>
+                    <div class="form-text">Centre où le candidat passera l'examen</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="statut" class="form-label required">Statut de la candidature</label>
+                    <select class="form-select" id="statut" name="statut" required>
+                        <option value="EN_ATTENTE" th:selected="${candidature.statut.name() == 'EN_ATTENTE'}">
+                            En attente
+                        </option>
+                        <option value="VALIDEE" th:selected="${candidature.statut.name() == 'VALIDEE'}">
+                            Validée
+                        </option>
+                        <option value="REJETEE" th:selected="${candidature.statut.name() == 'REJETEE'}">
+                            Rejetée
+                        </option>
+                    </select>
+                    <div class="form-text">État actuel de la candidature</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Préférences de notification -->
+        <div class="form-section">
+            <h5 class="mb-4"><i class="fas fa-bell me-2 text-primary"></i>Préférences de notification</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="notifications" class="form-label">Mode de notification</label>
+                    <select class="form-select" id="notifications" name="notifications">
+                        <option value="EMAIL" th:selected="${candidature.notifications.name() == 'EMAIL'}">
+                            Email uniquement
+                        </option>
+                        <option value="SMS" th:selected="${candidature.notifications.name() == 'SMS'}">
+                            SMS uniquement
+                        </option>
+                        <option value="LES_DEUX" th:selected="${candidature.notifications.name() == 'LES_DEUX'}">
+                            Email et SMS
+                        </option>
+                    </select>
+                    <div class="form-text">Comment le candidat souhaite être contacté</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" id="accepter"
+                               name="accepter" th:checked="${candidature.accepter}">
+                        <label class="form-check-label" for="accepter">
+                            Conditions d'utilisation acceptées
+                        </label>
+                        <div class="form-text">Le candidat a accepté les conditions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations de traitement -->
+        <div class="form-section" th:if="${candidature.utilisateurTraitant != null}">
+            <h5 class="mb-4"><i class="fas fa-user-cog me-2 text-primary"></i>Informations de traitement</h5>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Cette candidature a été traitée par : <strong th:text="${candidature.utilisateurTraitant}">admin</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-mef btn-lg me-3">
+                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+            </button>
+
+            <a th:href="@{'/admin/candidatures/details/' + ${candidature.numero}}"
+               class="btn btn-outline-secondary btn-lg me-3">
+                <i class="fas fa-eye me-2"></i>Voir les détails
+            </a>
+
+            <a th:href="@{/admin/gestion-candidatures/list}"
+               class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </form>
+
+    <!-- Section des documents (lecture seule) -->
+    <div class="form-section mt-4">
+        <h5 class="mb-4"><i class="fas fa-paperclip me-2 text-primary"></i>Documents fournis</h5>
+        <div th:if="${candidature.documents != null and !candidature.documents.empty}">
+            <div class="row">
+                <div class="col-md-4" th:each="document : ${candidature.documents}">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                            <h6 class="card-title" th:text="${document.type.name()}">CV</h6>
+                            <p class="card-text">
+                                <strong th:text="${document.nom}">cv_candidat.pdf</strong><br>
+                                <small class="text-muted">
+                                    Taille: <span th:text="${document.tailleFormatee}">2.5 MB</span>
+                                </small>
+                            </p>
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{'/documents/view/' + ${document.id}}"
+                                   class="btn btn-outline-primary" target="_blank">
+                                    <i class="fas fa-eye me-1"></i>Voir
+                                </a>
+                                <a th:href="@{'/documents/download/' + ${document.id}}"
+                                   class="btn btn-outline-success">
+                                    <i class="fas fa-download me-1"></i>Télécharger
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:unless="${candidature.documents != null and !candidature.documents.empty}"
+             class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>Aucun document fourni</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Validation du formulaire
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const concoursId = document.getElementById('concoursId').value;
+        const specialiteId = document.getElementById('specialiteId').value;
+        const centreId = document.getElementById('centreId').value;
+
+        if (!concoursId || !specialiteId || !centreId) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires.');
+            return false;
+        }
+    });
+
+    // Auto-dismiss des alertes
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+
+    // Confirmation avant modification du statut
+    document.getElementById('statut').addEventListener('change', function() {
+        const selectedValue = this.value;
+        const currentStatus = this.dataset.current || 'EN_ATTENTE';
+
+        if (selectedValue !== currentStatus && (selectedValue === 'VALIDEE' || selectedValue === 'REJETEE')) {
+            if (!confirm(`Êtes-vous sûr de vouloir changer le statut vers "${this.options[this.selectedIndex].text}" ?\n\nLe candidat sera automatiquement notifié de ce changement.`)) {
+                this.value = currentStatus;
+            }
+        }
+    });
+</script>
+</body>
+</html>

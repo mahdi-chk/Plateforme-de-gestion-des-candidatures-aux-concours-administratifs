@@ -1,0 +1,1 @@
+ALTER TABLE utilisateur ADD COLUMN last_login TIMESTAMP;

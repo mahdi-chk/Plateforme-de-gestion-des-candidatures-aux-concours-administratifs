@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="navigation" class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--ministere-blue);">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/public/}">
+            <i class="fas fa-home me-2"></i>Concours MEF
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/public/}"
+                       th:classappend="${#request.requestURI == '/public/' or #request.requestURI == '/public'} ? 'active' : ''">
+                        <i class="fas fa-home me-1"></i> Accueil
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/public/concours}"
+                       th:classappend="${#strings.startsWith(#request.requestURI, '/public/concours')} ? 'active' : ''">
+                        <i class="fas fa-trophy me-1"></i> Concours
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/public/candidature}"
+                       th:classappend="${#strings.startsWith(#request.requestURI, '/public/candidature')} ? 'active' : ''">
+                        <i class="fas fa-file-alt me-1"></i> Candidature
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/public/suivi}"
+                       th:classappend="${#strings.startsWith(#request.requestURI, '/public/suivi')} ? 'active' : ''">
+                        <i class="fas fa-search me-1"></i> Suivi
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Section authentification -->
+            <div class="d-flex align-items-center">
+                <!-- Si utilisateur non connecté -->
+                <div sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/auth/login}" class="btn btn-outline-light me-2">
+                        <i class="fas fa-sign-in-alt me-1"></i> Connexion
+                    </a>
+                </div>
+
+                <!-- Si utilisateur connecté -->
+                <div sec:authorize="isAuthenticated()" class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button"
+                            id="userDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>
+                        <span sec:authentication="name">Utilisateur</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <!-- Menu Admin -->
+                        <li sec:authorize="hasRole('ADMIN')">
+                            <a class="dropdown-item" th:href="@{/admin/dashboard}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Administration
+                            </a>
+                        </li>
+                        <!-- Menu Gestionnaire Global -->
+                        <li sec:authorize="hasRole('GESTIONNAIRE_GLOBAL')">
+                            <a class="dropdown-item" th:href="@{/gestionnaire-global/dashboard}">
+                                <i class="fas fa-cogs me-2"></i>Gestion Globale
+                            </a>
+                        </li>
+                        <!-- Menu Gestionnaire Local -->
+                        <li sec:authorize="hasRole('GESTIONNAIRE_LOCAL')">
+                            <a class="dropdown-item" th:href="@{/templates/gestionnaire-local/dashboard.html}">
+                                <i class="fas fa-tasks me-2"></i>Gestion Locale
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" th:href="@{/profile}">
+                                <i class="fas fa-user-edit me-2"></i>Mon Profil
+                            </a>
+                        </li>
+                        <li>
+                            <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

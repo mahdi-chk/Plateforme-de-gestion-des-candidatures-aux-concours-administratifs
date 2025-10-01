@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Candidatures - Gestionnaire Local</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+        body {
+            background-color: var(--gris-fond);
+            padding-top: 20px;
+        }
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: var(--bleu-mef);
+            margin-bottom: 25px;
+        }
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            font-weight: 600;
+        }
+        .btn-mef:hover {
+            background-color: #003f80;
+        }
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .badge-status {
+            font-size: 0.75rem;
+            padding: 0.5em 0.75em;
+        }
+        .filter-card {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 8px;
+        }
+        .filter-card .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .navbar-custom {
+            background-color: var(--bleu-mef);
+            margin-bottom: 20px;
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-folder-open me-2"></i>Gestion des Candidatures</h2>
+            <p class="text-muted mb-0" th:text="'Centre: ' + ${centreActuel.villeNom}">Centre: Nom du Centre</p>
+        </div>
+        <a th:href="@{/gestionnaire-local/dashboard}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card filter-card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Filtres de recherche</h6>
+        </div>
+        <div class="card-body">
+            <form class="row g-3" method="get" th:action="@{/gestionnaire-local/candidatures/list}">
+                <div class="col-md-3">
+                    <label class="form-label">Recherche texte</label>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Nom, email, diplôme..." th:value="${search}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Concours</label>
+                    <select name="concoursId" class="form-select">
+                        <option value="">Tous</option>
+                        <option th:each="c : ${concoursList}"
+                                th:value="${c.id}"
+                                th:text="${c.titre}"
+                                th:selected="${c.id == concoursId}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Spécialité</label>
+                    <select name="specialiteId" class="form-select">
+                        <option value="">Toutes</option>
+                        <option th:each="s : ${specialites}"
+                                th:value="${s.id}"
+                                th:text="${s.libelle}"
+                                th:selected="${s.id == specialiteId}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="EN_ATTENTE" th:selected="${statut == 'EN_ATTENTE'}">En attente</option>
+                        <option value="VALIDEE" th:selected="${statut == 'VALIDEE'}">Validée</option>
+                        <option value="REJETEE" th:selected="${statut == 'REJETEE'}">Rejetée</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Diplôme</label>
+                    <input type="text" name="diplome" class="form-control"
+                           placeholder="Filtrer par diplôme" th:value="${diplome}">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Page</label>
+                    <select name="size" class="form-select">
+                        <option value="10" th:selected="${pageSize == 10}">10</option>
+                        <option value="25" th:selected="${pageSize == 25}">25</option>
+                        <option value="50" th:selected="${pageSize == 50}">50</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-mef">
+                            <i class="fas fa-filter me-1"></i> Appliquer les filtres
+                        </button>
+                        <a th:href="@{/gestionnaire-local/candidatures/list}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Réinitialiser
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Résultats -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <span th:text="${totalElements}">0</span> candidature(s) trouvée(s)
+                </span>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary btn-sm" disabled>
+                Page <span th:text="${currentPage + 1}">1</span> sur <span th:text="${totalPages}">1</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>N° Candidature</th>
+                <th>Candidat</th>
+                <th>Concours</th>
+                <th>Spécialité</th>
+                <th>Diplôme</th>
+                <th>Date dépôt</th>
+                <th>Statut</th>
+                <th width="150">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${candidatures.content}" th:if="${!candidatures.empty}">
+                <td>
+                    <strong th:text="${c.numero}">CN-00001</strong>
+                </td>
+                <td>
+                    <div>
+                        <strong th:text="${c.candidatNom + ' ' + c.candidatPrenom}">Nom Prénom</strong>
+                        <br>
+                        <small class="text-muted" th:text="${c.candidatEmail}">email@example.com</small>
+                    </div>
+                </td>
+                <td th:text="${c.concoursTitre}">Concours</td>
+                <td th:text="${c.specialiteLibelle}">Spécialité</td>
+                <td th:text="${c.candidatDiplome}">Diplôme</td>
+                <td th:text="${#temporals.format(c.dateDepot, 'dd/MM/yyyy')}">01/01/2023</td>
+                <td>
+                    <span class="badge badge-status" th:classappend="${c.statut == 'VALIDEE'} ? 'bg-success' : (${c.statut == 'REJETEE'} ? 'bg-danger' : 'bg-warning text-dark')" th:text="${c.statut}">EN_ATTENTE</span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a th:href="@{'/gestionnaire-local/candidatures/details/' + ${c.numero}}"
+                           class="btn btn-outline-info action-btn" title="Détails">
+                            <i class="fas fa-eye"></i>
+                        </a>
+
+                        <a th:href="@{'/gestionnaire-local/candidatures/communication/' + ${c.numero}}"
+                           class="btn btn-outline-primary action-btn" title="Communiquer">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+
+                        <div th:if="${c.statut == 'EN_ATTENTE'}">
+                            <form th:action="@{'/gestionnaire-local/candidatures/valider/' + ${c.numero}}"
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-success action-btn"
+                                        title="Valider" onclick="return confirm('Valider cette candidature ?')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-outline-danger action-btn"
+                                    title="Rejeter" data-bs-toggle="modal"
+                                    th:attr="data-bs-target='#rejectModal' + ${c.numero}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${candidatures.empty}">
+                <td colspan="8" class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune candidature trouvée</h5>
+                    <p class="text-muted">Aucune candidature ne correspond aux critères de recherche.</p>
+                    <a th:href="@{/gestionnaire-local/candidatures/list}" class="btn btn-outline-primary">
+                        <i class="fas fa-refresh me-1"></i> Réinitialiser les filtres
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" aria-label="Navigation des pages" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/gestionnaire-local/candidatures/list(page=0, size=${pageSize}, search=${search}, concoursId=${concoursId}, specialiteId=${specialiteId}, statut=${statut}, diplome=${diplome})}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{/gestionnaire-local/candidatures/list(page=${currentPage - 1}, size=${pageSize}, search=${search}, concoursId=${concoursId}, specialiteId=${specialiteId}, statut=${statut}, diplome=${diplome})}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+
+            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                class="page-item" th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link"
+                   th:href="@{/gestionnaire-local/candidatures/list(page=${i}, size=${pageSize}, search=${search}, concoursId=${concoursId}, specialiteId=${specialiteId}, statut=${statut}, diplome=${diplome})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/gestionnaire-local/candidatures/list(page=${currentPage + 1}, size=${pageSize}, search=${search}, concoursId=${concoursId}, specialiteId=${specialiteId}, statut=${statut}, diplome=${diplome})}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{/gestionnaire-local/candidatures/list(page=${totalPages - 1}, size=${pageSize}, search=${search}, concoursId=${concoursId}, specialiteId=${specialiteId}, statut=${statut}, diplome=${diplome})}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<!-- Modales de rejet -->
+<div th:each="c : ${candidatures.content}" th:if="${c.statut == 'EN_ATTENTE'}">
+    <div class="modal fade" th:id="'rejectModal' + ${c.numero}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{'/gestionnaire-local/candidatures/rejeter/' + ${c.numero}}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Rejeter la candidature
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Vous êtes sur le point de rejeter la candidature de
+                            <strong th:text="${c.candidatNom + ' ' + c.candidatPrenom}"></strong>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motif" class="form-label">Motif de rejet *</label>
+                            <textarea class="form-control" id="motif" name="motif"
+                                      rows="3" required placeholder="Précisez le motif de rejet..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="commentaire" class="form-label">Commentaire (optionnel)</label>
+                            <textarea class="form-control" id="commentaire" name="commentaire"
+                                      rows="2" placeholder="Commentaire supplémentaire..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-danger">Confirmer le rejet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

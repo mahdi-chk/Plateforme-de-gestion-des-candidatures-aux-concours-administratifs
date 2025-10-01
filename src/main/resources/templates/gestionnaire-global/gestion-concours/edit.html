@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier un Concours - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --bleu-mef-light: #e6f0ff;
+            --gris-fond: #f8f9fa;
+            --orange-avertissement: #ff9800;
+        }
+        body {
+            background-color: var(--gris-fond);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .form-container {
+            max-width: 950px;
+            margin: 30px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: var(--bleu-mef);
+            margin-bottom: 30px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--bleu-mef);
+            padding-bottom: 15px;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .btn-mef:hover {
+            background-color: #003f80;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-home {
+            background-color: var(--gris-fond);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            font-weight: 500;
+            margin-top: 15px;
+            text-align: center;
+            display: block;
+            width: 100%;
+            text-decoration: none;
+            color: #000;
+            transition: all 0.2s;
+        }
+        .btn-home:hover {
+            background-color: #e9ecef;
+            text-decoration: none;
+            color: #000;
+        }
+        .small-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .date-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .invalid-feedback {
+            display: block;
+            font-size: 0.85rem;
+        }
+        .badge-status {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        .section-title {
+            color: var(--bleu-mef);
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            margin: 25px 0 15px 0;
+            font-weight: 600;
+        }
+        .condition-item, .centre-item {
+            background-color: var(--bleu-mef-light);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .condition-item button, .centre-item button {
+            padding: 2px 8px;
+            font-size: 0.8rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--bleu-mef);
+            box-shadow: 0 0 0 0.25rem rgba(0, 86, 179, 0.25);
+        }
+        .alert {
+            border: none;
+            border-radius: 8px;
+        }
+        .warning-panel {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .warning-icon {
+            color: var(--orange-avertissement);
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        .concours-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        .status-ouvert {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-brouillon {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .status-clos {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 20px;
+                margin: 15px;
+            }
+            .btn-mef, .btn-home {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container form-container">
+    <form id="concoursForm" method="POST" th:action="@{'/admin/concours/update/' + ${concours.id}}" th:object="${concours}">
+        <h2>
+            <i class="fas fa-edit me-2"></i>Modification du Concours
+            <!-- Correction du statut du concours -->
+            <th:block th:with="now=${T(java.time.LocalDate).now()}">
+                <span class="concours-status"
+                      th:if="${concours.dateOuverture != null and concours.dateCloture != null}"
+                      th:classappend="${concours.dateOuverture.isAfter(now)} ? 'status-brouillon' :
+                                      (${concours.dateCloture.isBefore(now)} ? 'status-clos' : 'status-ouvert')"
+                      th:text="${concours.dateOuverture.isAfter(now)} ? 'BROUILLON' :
+                               (${concours.dateCloture.isBefore(now)} ? 'CLÔTURÉ' : 'OUVERT')">
+                </span>
+                <span class="concours-status status-brouillon"
+                      th:unless="${concours.dateOuverture != null and concours.dateCloture != null}">
+                    STATUT INDÉTERMINÉ
+                </span>
+            </th:block>
+        </h2>
+
+        <!-- Avertissement pour les concours ouverts - CORRIGÉ -->
+        <th:block th:with="now=${T(java.time.LocalDate).now()}">
+            <div th:if="${concours.dateOuverture != null and concours.dateCloture != null and
+                         concours.dateOuverture.isBefore(now) and concours.dateCloture.isAfter(now)}"
+                 class="warning-panel">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle warning-icon"></i>
+                    <div>
+                        <h5 class="mb-1">Concours en cours</h5>
+                        <p class="mb-0">Ce concours est actuellement ouvert aux candidatures. Les modifications pourraient affecter les candidats déjà inscrits.</p>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+
+        <!-- Messages d'erreur globaux -->
+        <div th:if="${error}" class="alert alert-danger mb-3">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}">Erreur</span>
+        </div>
+
+        <!-- Message de succès -->
+        <div th:if="${success}" class="alert alert-success mb-3">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}">Succès</span>
+        </div>
+
+        <!-- Informations de base -->
+        <h4 class="section-title">Informations générales</h4>
+
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Titre du concours :</label>
+                <input type="text" name="titre" class="form-control" th:value="${concours.titre}" required maxlength="200">
+                <div class="invalid-feedback" id="titre-error">
+                    Le titre du concours est obligatoire (max 200 caractères)
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Date d'ouverture :</label>
+                <input type="date" id="dateOuverture" name="dateOuverture" class="form-control"
+                       th:value="${#temporals.format(concours.dateOuverture, 'yyyy-MM-dd')}" required>
+                <div class="date-info">Date à partir de laquelle les candidatures sont acceptées</div>
+                <div class="invalid-feedback" id="dateOuverture-error">
+                    La date d'ouverture est obligatoire
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Date de clôture :</label>
+                <input type="date" id="dateCloture" name="dateCloture" class="form-control"
+                       th:value="${#temporals.format(concours.dateCloture, 'yyyy-MM-dd')}" required>
+                <div class="date-info">Date limite de dépôt des candidatures</div>
+                <div class="invalid-feedback" id="dateCloture-error">
+                    La date de clôture est obligatoire et doit être après la date d'ouverture
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Date du concours :</label>
+                <input type="date" id="dateConcours" name="dateConcours" class="form-control"
+                       th:value="${#temporals.format(concours.dateConcours, 'yyyy-MM-dd')}" required>
+                <div class="date-info">Date à laquelle se déroulera le concours</div>
+                <div class="invalid-feedback" id="dateConcours-error">
+                    La date du concours est obligatoire
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Nombre total de postes :</label>
+                <input type="number" id="nbPostes" name="nbPostes" class="form-control" th:value="${concours.nbPostes}" min="1" required>
+                <div class="invalid-feedback" id="nbPostes-error">
+                    Le nombre de postes doit être au moins 1
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Statut :</label>
+                <select class="form-select" name="publie">
+                    <option value="false" th:selected="${concours.publie == false}">Brouillon</option>
+                    <option value="true" th:selected="${concours.publie == true}">Publié</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Spécialités -->
+        <h4 class="section-title">Spécialités et postes</h4>
+
+        <div class="mb-4">
+            <div id="specialites-container">
+                <div th:each="specialite, iterStat : ${concours.specialites}" class="row mb-2">
+                    <div class="col-md-7">
+                        <select th:name="'specialites[' + ${iterStat.index} + '].id'" class="form-select" required>
+                            <option value="">-- Choisir une spécialité --</option>
+                            <option th:each="sp : ${specialites}"
+                                    th:value="${sp.id}"
+                                    th:text="${sp.libelle}"
+                                    th:selected="${sp.id == specialite.id}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" th:name="'specialites[' + ${iterStat.index} + '].nbPostes'"
+                               class="form-control" placeholder="Postes" min="1"
+                               th:value="${specialite.nbPostes}" required>
+                    </div>
+                    <div class="col-md-2" th:if="${iterStat.index > 0}">
+                        <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeSpecialite(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="ajouterSpecialite" class="btn btn-outline-primary btn-sm mt-2">
+                <i class="fas fa-plus me-1"></i> Ajouter une spécialité
+            </button>
+        </div>
+
+        <!-- Centres d'examen - CORRIGÉ -->
+        <h4 class="section-title">Centres d'examen</h4>
+
+        <div class="mb-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <select id="centresSelect" class="form-select" size="5" multiple>
+                        <option th:each="centre : ${centres}"
+                                th:value="${centre.id}"
+                                th:text="${centre.code} + ' - ' + ${centre.villeNom}"
+                                th:selected="${concours.centresExamenIds != null and #lists.contains(#strings.listSplit(concours.centresExamenIds, ','), centre.id)}">
+                        </option>
+                    </select>
+                    <div class="form-text">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs centres</div>
+                    <div class="invalid-feedback" id="centres-error">
+                        Veuillez sélectionner au moins un centre d'examen
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display selected centres -->
+            <div class="mt-3">
+                <label class="form-label">Centres sélectionnés :</label>
+                <div id="centresSelectionnees" class="border rounded p-3">
+                    <p class="text-muted small-text mb-0" th:if="${concours.centresExamenIds == null or #lists.isEmpty(#strings.listSplit(concours.centresExamenIds, ','))}">Aucun centre sélectionné</p>
+                    <!-- Les centres seront ajoutés dynamiquement par JavaScript -->
+                </div>
+            </div>
+
+            <input type="hidden" name="centresExamenIds" id="centresExamenIds"
+                   th:if="${concours.centresExamenIds != null}"
+                   th:value="${concours.centresExamenIds}">
+            <input type="hidden" name="centresExamenIds" id="centresExamenIds"
+                   th:unless="${concours.centresExamenIds != null}" value="">
+        </div>
+
+        <!-- Conditions de participation -->
+        <h4 class="section-title">Conditions de participation</h4>
+
+        <div class="mb-4">
+            <!-- Conditions pré-définies -->
+            <div class="mb-3">
+                <label class="form-label">Conditions pré-définies :</label>
+                <div class="d-flex flex-wrap gap-2" id="conditions-predefinies">
+                    <div th:each="condition,iter : ${conditionsPredefinies}" class="form-check">
+                        <input class="form-check-input condition-checkbox" type="checkbox"
+                               th:id="'cond-' + ${iter.index}"
+                               th:value="${condition}">
+                        <label class="form-check-label small-text"
+                               th:for="'cond-' + ${iter.index}"
+                               th:text="${condition}"></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Condition personnalisée -->
+            <div class="mb-3">
+                <label class="form-label">Ajouter une condition personnalisée :</label>
+                <div class="input-group">
+                    <input type="text" id="nouvelleCondition" class="form-control" placeholder="Saisissez votre condition">
+                    <button type="button" id="ajouterCondition" class="btn btn-outline-secondary">Ajouter</button>
+                </div>
+            </div>
+
+            <!-- Affichage des conditions sélectionnées -->
+            <div class="mb-3">
+                <label class="form-label">Conditions sélectionnées :</label>
+                <div class="border rounded p-3" id="conditionsSelectionnees">
+                    <p class="text-muted small-text mb-0">Aucune condition sélectionnée</p>
+                    <!-- Les conditions seront ajoutées dynamiquement par JavaScript -->
+                </div>
+            </div>
+
+            <!-- Champ caché pour les conditions -->
+            <textarea name="conditions" class="d-none" id="conditionsInput"
+                      th:if="${concours.conditions != null}"
+                      th:text="${concours.conditions}" required></textarea>
+            <textarea name="conditions" class="d-none" id="conditionsInput"
+                      th:unless="${concours.conditions != null}" required></textarea>
+            <div class="invalid-feedback" id="conditions-error">
+                Au moins une condition doit être sélectionnée
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-mef">
+                <i class="fas fa-save me-2"></i>Enregistrer les modifications
+            </button>
+
+            <a th:href="@{/gestionnaire-global/gestion-concours/list}" class="btn btn-home">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste des concours
+            </a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Global variables
+    let centresSelectionnes = [];
+    let conditionsSelectionnees = [];
+    let specialiteCounter = [[${#lists.size(concours.specialites)}]] || 0;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeForm();
+        setupEventListeners();
+        validateDates();
+    });
+
+    function initializeForm() {
+        // Initialiser les centres sélectionnés depuis les options sélectionnées
+        const centresSelect = document.getElementById('centresSelect');
+        Array.from(centresSelect.options).forEach(option => {
+            if (option.selected) {
+                centresSelectionnes.push({
+                    id: option.value,
+                    text: option.text
+                });
+            }
+        });
+        updateCentresSelectionnes();
+
+        // Initialiser les conditions depuis le champ caché si elles existent
+        const conditionsInput = document.getElementById('conditionsInput');
+        if (conditionsInput && conditionsInput.value) {
+            // Séparer les conditions par saut de ligne ou par le séparateur utilisé
+            const existingConditions = conditionsInput.value.split('\n').map(c => c.trim()).filter(c => c);
+
+            // Enlever le préfixe "• " si présent
+            existingConditions.forEach(condition => {
+                const cleanCondition = condition.replace(/^•\s*/, '');
+                if (cleanCondition && !conditionsSelectionnees.includes(cleanCondition)) {
+                    conditionsSelectionnees.push(cleanCondition);
+
+                    // Cocher les conditions pré-définies correspondantes
+                    document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
+                        if (checkbox.value === cleanCondition) {
+                            checkbox.checked = true;
+                        }
+                    });
+                }
+            });
+        }
+
+        updateConditionsAffichage();
+    }
+
+    function setupEventListeners() {
+        // 1. Gestion de l'ajout de spécialités
+        document.getElementById('ajouterSpecialite').addEventListener('click', function() {
+            const container = document.getElementById('specialites-container');
+            const newRow = document.createElement('div');
+            newRow.className = 'row mb-2';
+            newRow.innerHTML = `
+                <div class="col-md-7">
+                    <select name="specialites[${specialiteCounter}].id" class="form-select" required>
+                        <option value="">-- Choisir une spécialité --</option>
+                        ${Array.from(document.querySelector('[name^="specialites["]').options)
+                .map(opt => `<option value="${opt.value}">${opt.text}</option>`)
+                .join('')}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="specialites[${specialiteCounter}].nbPostes"
+                           class="form-control" placeholder="Postes" min="1" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeSpecialite(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(newRow);
+            specialiteCounter++;
+        });
+
+        // 2. Gestion des centres d'examen
+        const centresSelect = document.getElementById('centresSelect');
+        centresSelect.addEventListener('change', function() {
+            centresSelectionnes = Array.from(this.selectedOptions).map(option => ({
+                id: option.value,
+                text: option.text
+            }));
+            updateCentresSelectionnes();
+        });
+
+        // 3. Gestion des conditions
+        document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const condition = this.value;
+                if (this.checked && !conditionsSelectionnees.includes(condition)) {
+                    conditionsSelectionnees.push(condition);
+                } else {
+                    conditionsSelectionnees = conditionsSelectionnees.filter(c => c !== condition);
+                }
+                updateConditionsAffichage();
+            });
+        });
+
+        // Ajout de condition personnalisée
+        document.getElementById('ajouterCondition').addEventListener('click', function() {
+            const nouvelleCondition = document.getElementById('nouvelleCondition').value.trim();
+            if (nouvelleCondition && !conditionsSelectionnees.includes(nouvelleCondition)) {
+                conditionsSelectionnees.push(nouvelleCondition);
+                document.getElementById('nouvelleCondition').value = '';
+                updateConditionsAffichage();
+            }
+        });
+
+        // Validation des dates
+        document.getElementById('dateOuverture').addEventListener('change', validateDates);
+        document.getElementById('dateCloture').addEventListener('change', validateDates);
+        document.getElementById('dateConcours').addEventListener('change', validateDates);
+
+        // 4. Soumission du formulaire
+        document.getElementById('concoursForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validateForm()) {
+                // Préparation des données
+                const centresInput = document.getElementById('centresExamenIds');
+                centresInput.value = centresSelectionnes.map(c => c.id).join(',');
+
+                const conditionsInput = document.getElementById('conditionsInput');
+                conditionsInput.value = conditionsSelectionnees.map(c => '• ' + c).join('\n');
+
+                this.submit();
+            }
+        });
+    }
+
+    function validateDates() {
+        const dateOuverture = new Date(document.getElementById('dateOuverture').value);
+        const dateCloture = new Date(document.getElementById('dateCloture').value);
+        const dateConcours = new Date(document.getElementById('dateConcours').value);
+
+        let isValid = true;
+
+        // Validation date de clôture
+        if (dateCloture && dateOuverture && dateCloture <= dateOuverture) {
+            document.getElementById('dateCloture-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('dateCloture-error').style.display = 'none';
+        }
+
+        return isValid;
+    }
+
+    function validateForm() {
+        let isValid = true;
+
+        // Validation des dates
+        if (!validateDates()) {
+            isValid = false;
+        }
+
+        // Validation des centres
+        if (centresSelectionnes.length === 0) {
+            document.getElementById('centres-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('centres-error').style.display = 'none';
+        }
+
+        // Validation des conditions
+        if (conditionsSelectionnees.length === 0) {
+            document.getElementById('conditions-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('conditions-error').style.display = 'none';
+        }
+
+        // Validation du titre
+        const titre = document.querySelector('[name="titre"]').value;
+        if (!titre || titre.length > 200) {
+            document.getElementById('titre-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('titre-error').style.display = 'none';
+        }
+
+        // Validation du nombre de postes
+        const nbPostes = document.getElementById('nbPostes').value;
+        if (!nbPostes || nbPostes < 1) {
+            document.getElementById('nbPostes-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('nbPostes-error').style.display = 'none';
+        }
+
+        return isValid;
+    }
+
+    function removeSpecialite(button) {
+        const row = button.closest('.row');
+        row.remove();
+    }
+
+    function removeCentre(centreId) {
+        const centresSelect = document.getElementById('centresSelect');
+        centresSelectionnes = centresSelectionnes.filter(c => c.id !== centreId);
+
+        Array.from(centresSelect.options).forEach(option => {
+            if (option.value === centreId) {
+                option.selected = false;
+            }
+        });
+
+        updateCentresSelectionnes();
+    }
+
+    function removeCondition(condition) {
+        conditionsSelectionnees = conditionsSelectionnees.filter(c => c !== condition);
+        updateConditionsAffichage();
+
+        document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
+            if (checkbox.value === condition) {
+                checkbox.checked = false;
+            }
+        });
+    }
+
+    function updateConditionsAffichage() {
+        const container = document.getElementById('conditionsSelectionnees');
+        const conditionsInput = document.getElementById('conditionsInput');
+
+        if (conditionsSelectionnees.length === 0) {
+            container.innerHTML = '<p class="text-muted small-text mb-0">Aucune condition sélectionnée</p>';
+        } else {
+            container.innerHTML = conditionsSelectionnees.map(condition => `
+                <div class="condition-item">
+                    <span>${condition}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="removeCondition('${condition.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        conditionsInput.value = conditionsSelectionnees.map(c => '• ' + c).join('\n');
+    }
+
+    function updateCentresSelectionnes() {
+        const container = document.getElementById('centresSelectionnees');
+        const centresInput = document.getElementById('centresExamenIds');
+
+        if (centresSelectionnes.length === 0) {
+            container.innerHTML = '<p class="text-muted small-text mb-0">Aucun centre sélectionné</p>';
+        } else {
+            container.innerHTML = centresSelectionnes.map(centre => `
+                <div class="centre-item">
+                    <span>${centre.text}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="removeCentre('${centre.id}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        centresInput.value = centresSelectionnes.map(c => c.id).join(',');
+    }
+</script>
+
+</body>
+</html>

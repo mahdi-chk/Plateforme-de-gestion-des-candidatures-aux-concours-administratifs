@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier utilisateur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .page-container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--bleu-mef);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #centresSelection {
+            transition: all 0.3s ease;
+        }
+
+        .centres-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <h2><i class="fas fa-user-edit me-2"></i>Modifier l'utilisateur</h2>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <form th:action="@{'/admin/utilisateurs/edit/' + ${utilisateur.id}}" method="post" th:object="${utilisateur}">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="username" class="form-label">Nom d'utilisateur *</label>
+                <input type="text" class="form-control" id="username" th:field="*{username}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email *</label>
+                <input type="email" class="form-control" id="email" th:field="*{email}" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="role" class="form-label">Rôle *</label>
+                <select class="form-select" id="role" th:field="*{role}" required onchange="toggleCentresSelection()">
+                    <option value="">-- Sélectionner un rôle --</option>
+                    <option value="ROLE_ADMIN">Administrateur</option>
+                    <option value="ROLE_GESTIONNAIRE_GLOBAL">Gestionnaire Global</option>
+                    <option value="ROLE_GESTIONNAIRE_LOCAL">Gestionnaire Local</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="password" class="form-label">Nouveau mot de passe (optionnel)</label>
+                <input type="password" class="form-control" id="password" name="newPassword"
+                       placeholder="Laisser vide pour conserver l'actuel">
+            </div>
+        </div>
+
+        <!-- Section pour la sélection des centres (visible seulement pour ROLE_GESTIONNAIRE_LOCAL) -->
+        <div class="mb-3" id="centresSelection" style="display: none;">
+            <label class="form-label">Centres à affecter *</label>
+            <div class="centres-container">
+                <div th:each="centre : ${centres}" class="form-check">
+                    <input class="form-check-input" type="checkbox"
+                           th:id="'centre_' + ${centre.id}"
+                           th:value="${centre.id}"
+                           th:field="*{selectedCentres}">
+                    <label class="form-check-label" th:for="'centre_' + ${centre.id}">
+                        <span th:text="${centre.code}"></span> -
+                        <span th:text="${centre.villeNom}"></span>
+                        (Capacité: <span th:text="${centre.capacite}"></span>)
+                    </label>
+                </div>
+            </div>
+            <small class="text-muted">Sélectionnez les centres que ce gestionnaire local pourra gérer</small>
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="enabled" th:field="*{enabled}">
+                <label class="form-check-label" for="enabled">
+                    Compte activé
+                </label>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a th:href="@{/admin/gestion-utilisateurs/list}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> Modifier l'utilisateur
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function toggleCentresSelection() {
+        var roleSelect = document.getElementById('role');
+        var centresDiv = document.getElementById('centresSelection');
+
+        if (roleSelect.value === 'ROLE_GESTIONNAIRE_LOCAL') {
+            centresDiv.style.display = 'block';
+        } else {
+            centresDiv.style.display = 'none';
+            // Désélectionner tous les centres
+            var checkboxes = document.querySelectorAll('input[name="selectedCentres"]');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = false;
+            });
+        }
+    }
+
+    // Initialiser l'état au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        // Vérifier le rôle actuel et afficher/masquer la sélection des centres
+        var currentRole = document.getElementById('role').value;
+        var centresDiv = document.getElementById('centresSelection');
+
+        if (currentRole === 'ROLE_GESTIONNAIRE_LOCAL') {
+            centresDiv.style.display = 'block';
+        } else {
+            centresDiv.style.display = 'none';
+        }
+
+        toggleCentresSelection();
+    });
+</script>
+</body>
+</html>

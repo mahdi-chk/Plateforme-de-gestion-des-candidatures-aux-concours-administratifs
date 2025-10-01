@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Liste des Concours</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --ministere-blue: #0056b3;
+            --light-bg: #f8f9fa;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+        }
+
+        .ministere-header {
+            background-color: white;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .ministere-logo {
+            height: 65px;
+            margin-right: 15px;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--ministere-blue));
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1;
+        }
+
+        .badge-ouvert {
+            background-color: var(--success-color);
+        }
+
+        .badge-ferme {
+            background-color: var(--danger-color);
+        }
+
+        .badge-bientot {
+            background-color: var(--warning-color);
+            color: #000;
+        }
+
+        .filter-pills .nav-link {
+            border-radius: 25px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .filter-pills .nav-link.active {
+            background-color: var(--ministere-blue);
+            border-color: var(--ministere-blue);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            background-color: white;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+
+        .pagination .page-link {
+            border-radius: 6px;
+            margin: 0 2px;
+            border: 1px solid #dee2e6;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--ministere-blue);
+            border-color: var(--ministere-blue);
+        }
+
+        .search-results-info {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            min-height: 48px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-conditions {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 72px;
+        }
+    </style>
+</head>
+
+<body>
+<!-- En-tête -->
+<header class="ministere-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="https://imgs.search.brave.com/_sQmz83PoFynMn9wl0RNhXY0yh8yKwDM0fXEtyPgd3Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy9j/L2NiL01FRl9NT1JP/Q0NPLnBuZw"
+                 alt="Logo Ministère" class="ministere-logo">
+            <div>
+                <h4 class="mb-0" style="color: var(--ministere-blue);">Ministère de l'économie et des finances</h4>
+                <p class="mb-0 text-muted">Portail des Concours Administratifs</p>
+            </div>
+        </div>
+        <div class="d-none d-md-block">
+            <a th:href="@{/public/}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-home me-1"></i> Accueil
+            </a>
+            <a th:href="@{/public/candidature}" class="btn btn-primary me-2">
+                <i class="fas fa-file-alt me-1"></i> Postuler
+            </a>
+            <a th:href="@{/public/suivi}" class="btn btn-outline-primary">
+                <i class="fas fa-search me-1"></i> Suivi
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Section de recherche -->
+<section class="search-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="text-center mb-4">
+                    <i class="fas fa-trophy me-3"></i>
+                    Rechercher des Concours
+                </h1>
+
+                <form th:action="@{/public/concours}" method="get" class="mb-4">
+                    <div class="input-group input-group-lg">
+                        <input type="text"
+                               class="form-control"
+                               name="search"
+                               th:value="${search}"
+                               placeholder="Rechercher par titre, spécialité, conditions..."
+                               aria-label="Recherche">
+                        <input type="hidden" name="statut" th:value="${statut}">
+                        <button class="btn btn-light" type="submit">
+                            <i class="fas fa-search me-2"></i>Rechercher
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Filtres de statut -->
+                <div class="d-flex justify-content-center">
+                    <ul class="nav nav-pills filter-pills">
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${statut == 'tous'} ? 'active' : ''"
+                               th:href="@{/public/concours(statut='tous', search=${search})}">
+                                <i class="fas fa-list me-1"></i>Tous
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${statut == 'ouverts'} ? 'active' : ''"
+                               th:href="@{/public/concours(statut='ouverts', search=${search})}">
+                                <i class="fas fa-door-open me-1"></i>Ouverts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${statut == 'fermes'} ? 'active' : ''"
+                               th:href="@{/public/concours(statut='fermes', search=${search})}">
+                                <i class="fas fa-door-closed me-1"></i>Fermés
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contenu principal -->
+<main class="container mb-5">
+
+    <!-- Informations sur les résultats -->
+    <div class="search-results-info" th:if="${totalElements != null}">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h5 class="mb-1">
+                    <i class="fas fa-list-ul me-2 text-primary"></i>
+                    Résultats de recherche
+                </h5>
+                <p class="mb-0 text-muted">
+                    <span th:text="${totalElements}">0</span> concours trouvé(s)
+                    <span th:if="${search != null and !#strings.isEmpty(search)}">
+                            pour "<strong th:text="${search}">recherche</strong>"
+                        </span>
+                    <span th:if="${statut != null and statut != 'tous'}">
+                            - Statut: <strong th:text="${statut}">statut</strong>
+                        </span>
+                </p>
+            </div>
+            <div>
+                <small class="text-muted">
+                    Page <span th:text="${currentPage + 1}">1</span>
+                    sur <span th:text="${totalPages}">1</span>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message d'erreur -->
+    <div class="alert alert-danger" role="alert" th:if="${error}">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span th:text="${error}">Erreur</span>
+    </div>
+
+    <!-- Liste des concours -->
+    <div class="row" th:if="${concours != null and !#lists.isEmpty(concours)}">
+        <div th:each="c : ${concours}" class="col-lg-4 col-md-6 mb-4">
+            <div class="card position-relative">
+                <!-- Badge de statut dynamique -->
+                <!-- Badge de statut dynamique -->
+                <span class="badge badge-status"
+                      th:class="'badge ' +
+               (${c.dateCloture.isBefore(T(java.time.LocalDate).now())} ? 'badge-ferme' :
+                (${c.dateOuverture.isAfter(T(java.time.LocalDate).now())} ? 'badge-bientot' : 'badge-ouvert'))"
+                      th:text="${c.dateCloture.isBefore(T(java.time.LocalDate).now())} ? 'Fermé' :
+               (${c.dateOuverture.isAfter(T(java.time.LocalDate).now())} ? 'Bientôt' : 'Ouvert')">
+    Statut
+</span>
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title" th:text="${c.titre}">Titre du concours</h5>
+
+                    <!-- Conditions du concours -->
+                    <p class="card-text text-muted card-conditions flex-grow-1"
+                       th:if="${c.conditions != null and !#strings.isEmpty(c.conditions)}"
+                       th:text="${c.conditions}">
+                        Conditions du concours...
+                    </p>
+                    <p class="card-text text-muted flex-grow-1"
+                       th:if="${c.conditions == null or #strings.isEmpty(c.conditions)}">
+                        <i>Aucune condition spécifiée</i>
+                    </p>
+
+                    <!-- Informations complémentaires -->
+                    <div class="mb-3">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-briefcase me-1"></i>Postes
+                                </small>
+                                <strong class="text-primary" th:text="${c.nbPostes}">0</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-users me-1"></i>Spécialités
+                                </small>
+                                <strong class="text-info" th:text="${c.specialites != null ? #lists.size(c.specialites) : '0'}">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spécialités (si disponibles) -->
+                    <div class="mb-3" th:if="${c.specialites != null and !#lists.isEmpty(c.specialites)}">
+                        <small class="text-muted d-block mb-1">Spécialités:</small>
+                        <div>
+                                <span th:each="spec, iterStat : ${c.specialites}"
+                                      class="badge bg-light text-dark me-1 mb-1"
+                                      th:text="${spec.libelle}">
+                                    Spécialité
+                                </span>
+                        </div>
+                    </div>
+
+                    <!-- Bouton d'action -->
+                    <div class="mt-auto">
+                        <a th:href="@{/public/concours/{id}(id=${c.id})}"
+                           class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-eye me-2"></i>Voir les détails
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dates importantes -->
+                <div class="card-footer bg-white border-top">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        <strong>Ouverture:</strong> <span th:text="${#temporals.format(c.dateOuverture, 'dd/MM/yyyy')}">01/01/2025</span><br>
+                        <i class="fas fa-calendar-times me-1"></i>
+                        <strong>Clôture:</strong> <span th:text="${#temporals.format(c.dateCloture, 'dd/MM/yyyy')}">31/12/2025</span><br>
+                        <i class="fas fa-calendar-check me-1"></i>
+                        <strong>Concours:</strong> <span th:text="${#temporals.format(c.dateConcours, 'dd/MM/yyyy')}">15/01/2026</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message si aucun résultat -->
+    <div class="no-results" th:if="${concours == null or #lists.isEmpty(concours)}">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Aucun concours trouvé</h4>
+        <p class="text-muted mb-4">
+                <span th:if="${search != null and !#strings.isEmpty(search)}">
+                    Aucun résultat pour "<strong th:text="${search}">recherche</strong>"
+                </span>
+            <span th:if="${search == null or #strings.isEmpty(search)}">
+                    Aucun concours ne correspond aux critères sélectionnés
+                </span>
+        </p>
+        <div>
+            <a th:href="@{/public/concours}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-list me-2"></i>Voir tous les concours
+            </a>
+            <a th:href="@{/public/}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Retour à l'accueil
+            </a>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Navigation des pages" th:if="${totalPages != null and totalPages > 1}">
+        <ul class="pagination justify-content-center">
+
+            <!-- Bouton Précédent -->
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/public/concours(page=${currentPage - 1}, search=${search}, statut=${statut})}"
+                   th:if="${currentPage > 0}">
+                    <i class="fas fa-chevron-left"></i> Précédent
+                </a>
+                <span class="page-link" th:if="${currentPage == 0}">
+                        <i class="fas fa-chevron-left"></i> Précédent
+                    </span>
+            </li>
+
+            <!-- Numéros de pages -->
+            <li class="page-item"
+                th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+                th:if="${page >= currentPage - 2 and page <= currentPage + 2}"
+                th:classappend="${page == currentPage} ? 'active'">
+                <a class="page-link"
+                   th:href="@{/public/concours(page=${page}, search=${search}, statut=${statut})}"
+                   th:text="${page + 1}">1</a>
+            </li>
+
+            <!-- Bouton Suivant -->
+            <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/public/concours(page=${currentPage + 1}, search=${search}, statut=${statut})}"
+                   th:if="${currentPage + 1 < totalPages}">
+                    Suivant <i class="fas fa-chevron-right"></i>
+                </a>
+                <span class="page-link" th:if="${currentPage + 1 >= totalPages}">
+                        Suivant <i class="fas fa-chevron-right"></i>
+                    </span>
+            </li>
+        </ul>
+    </nav>
+
+</main>
+
+<!-- Pied de page -->
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start">
+                <p class="mb-0">&copy; 2025 Ministère de l'économie et des finances. Tous droits réservés.</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <ul class="list-inline mb-0">
+                    <li class="list-inline-item"><a href="#" class="text-white">Mentions légales</a></li>
+                    <li class="list-inline-item"><a href="#" class="text-white">Contact</a></li>
+                    <li class="list-inline-item"><a href="#" class="text-white">Aide</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Fonction pour conserver les paramètres de recherche lors de la navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlighter les termes de recherche dans les résultats
+        const searchTerm = /*[[${search}]]*/ '';
+        if (searchTerm && searchTerm.length > 0) {
+            highlightSearchTerms(searchTerm);
+        }
+    });
+
+    function highlightSearchTerms(searchTerm) {
+        const elements = document.querySelectorAll('.card-title, .card-text');
+        const regex = new RegExp(`(${searchTerm})`, 'gi');
+
+        elements.forEach(element => {
+            if (element.innerHTML) {
+                element.innerHTML = element.innerHTML.replace(regex, '<mark>$1</mark>');
+            }
+        });
+    }
+
+    // Auto-submit du formulaire de recherche avec un délai
+    let searchTimeout;
+    document.querySelector('input[name="search"]')?.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            if (e.target.value.length >= 3 || e.target.value.length === 0) {
+                e.target.form.submit();
+            }
+        }, 1000);
+    });
+</script>
+</body>
+</html>

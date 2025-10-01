@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier la candidature</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+        body {
+            background-color: var(--gris-fond);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .page-container {
+            max-width: 900px;
+            margin: 30px auto;
+            background-color: white;
+            padding: 0;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .page-header {
+            background: linear-gradient(135deg, var(--bleu-mef), #007bff);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 12px 12px 0 0;
+        }
+        .page-header h2 {
+            margin: 0;
+            font-weight: 300;
+        }
+        .form-section {
+            padding: 30px;
+        }
+        .section-title {
+            color: var(--bleu-mef);
+            border-bottom: 2px solid var(--bleu-mef);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        .form-floating label {
+            color: #6c757d;
+        }
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-mef:hover {
+            background-color: #003f80;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .readonly-field {
+            background-color: #e9ecef;
+            opacity: 1;
+        }
+        .candidature-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .alert-custom {
+            border: none;
+            border-radius: 8px;
+            padding: 15px 20px;
+        }
+        @media (max-width: 768px) {
+            .page-container {
+                margin: 15px;
+                border-radius: 0;
+            }
+            .form-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h2><i class="fas fa-edit me-3"></i>Modifier la candidature</h2>
+        <p class="mb-0" th:text="'N° ' + ${candidature.numero}">N° CAND-20250907-A1B2</p>
+    </div>
+
+    <!-- Messages d'alerte - CORRECTION ICI -->
+    <div class="form-section" th:if="${success != null or error != null}">
+        <div class="alert alert-success alert-custom" th:if="${success != null}" th:text="${success}">
+            Message de succès
+        </div>
+        <div class="alert alert-danger alert-custom" th:if="${error != null}" th:text="${error}">
+            Message d'erreur
+        </div>
+    </div>
+
+    <div class="form-section">
+        <!-- Informations non modifiables -->
+        <div class="candidature-info">
+            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Informations de référence</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Candidat :</strong> <span th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}">Mahdi Chakouch</span></p>
+                    <p><strong>CIN :</strong> <span th:text="${candidature.candidatCin}">AB123456</span></p>
+                    <p><strong>Date de dépôt :</strong> <span th:text="${#temporals.format(candidature.dateDepot, 'dd/MM/yyyy')}">07/09/2025</span></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Concours :</strong> <span th:text="${candidature.concoursTitre}">Concours Développeur</span></p>
+                    <p><strong>Spécialité :</strong> <span th:text="${candidature.specialiteLibelle}">Informatique</span></p>
+                    <p><strong>Centre :</strong> <span th:text="${candidature.centreVille}">Rabat</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de modification -->
+        <form th:action="@{'/admin/candidatures/edit/' + ${candidature.numero}}" method="post">
+            <input type="hidden" name="numero" th:value="${candidature.numero}">
+
+            <h4 class="section-title"><i class="fas fa-cogs me-2"></i>Paramètres modifiables</h4>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <select class="form-select" id="statut" name="statut" required>
+                            <option value="" disabled>Sélectionner le statut</option>
+                            <option th:each="s : ${statuts}"
+                                    th:value="${s}"
+                                    th:text="${s}"
+                                    th:selected="${s == candidature.statut}">
+                                EN_ATTENTE
+                            </option>
+                        </select>
+                        <label for="statut">Statut de la candidature</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <select class="form-select" id="notifications" name="notifications">
+                            <option value="EMAIL" th:selected="${candidature.notifications == 'EMAIL'}">Email seulement</option>
+                            <option value="SMS" th:selected="${candidature.notifications == 'SMS'}">SMS seulement</option>
+                            <option value="LES_DEUX" th:selected="${candidature.notifications == 'LES_DEUX'}">Email et SMS</option>
+                        </select>
+                        <label for="notifications">Type de notifications</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Champ pour les commentaires/notes administratives -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="form-floating">
+                            <textarea class="form-control" id="commentaires" name="commentaires" style="height: 100px"
+                                      placeholder="Commentaires ou notes administratives..."></textarea>
+                        <label for="commentaires">Commentaires administratifs (optionnel)</label>
+                    </div>
+                    <div class="form-text">
+                        Ces commentaires sont visibles uniquement par les gestionnaires et administrateurs.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section d'informations sur le traitement -->
+            <div class="row mb-4" th:if="${candidature.utilisateurTraitant != null}">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-user-check me-2"></i>
+                        <strong>Dernière modification :</strong> par <span th:text="${candidature.utilisateurTraitant}">admin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions selon les permissions -->
+            <div class="row">
+                <div class="col-12">
+                    <h5 class="section-title"><i class="fas fa-tools me-2"></i>Actions disponibles</h5>
+
+                    <!-- Changement de statut rapide -->
+                    <div class="btn-group mb-3" role="group" aria-label="Actions rapides" th:if="${candidature.statut == 'EN_ATTENTE'}">
+                        <input type="radio" class="btn-check" name="actionRapide" id="validerRapide" value="VALIDEE">
+                        <label class="btn btn-outline-success" for="validerRapide">
+                            <i class="fas fa-check me-1"></i>Valider
+                        </label>
+
+                        <input type="radio" class="btn-check" name="actionRapide" id="rejeterRapide" value="REJETEE">
+                        <label class="btn btn-outline-danger" for="rejeterRapide">
+                            <i class="fas fa-times me-1"></i>Rejeter
+                        </label>
+                    </div>
+
+                    <!-- Champ conditionnel pour le motif de rejet -->
+                    <div class="mb-3" id="motifRejet" style="display: none;">
+                        <div class="form-floating">
+                                <textarea class="form-control" id="motifRejetText" name="motifRejet" style="height: 120px"
+                                          placeholder="Précisez les raisons du rejet..."></textarea>
+                            <label for="motifRejetText">Motif du rejet *</label>
+                        </div>
+                        <div class="form-text text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Ce motif sera envoyé par email au candidat.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="d-flex gap-3 justify-content-center mt-4">
+                <a th:href="@{'/admin/candidatures/details/' + ${candidature.numero}}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Annuler
+                </a>
+
+                <button type="submit" class="btn btn-mef">
+                    <i class="fas fa-save me-2"></i>Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+
+        <!-- Section d'aide -->
+        <div class="mt-5">
+            <div class="alert alert-light border">
+                <h6><i class="fas fa-question-circle me-2"></i>Aide</h6>
+                <ul class="mb-0 small">
+                    <li><strong>Validation :</strong> La candidature sera marquée comme acceptée et le candidat recevra un email de confirmation.</li>
+                    <li><strong>Rejet :</strong> La candidature sera refusée et le candidat recevra un email avec le motif spécifié.</li>
+                    <li><strong>Commentaires :</strong> Utilisez ce champ pour documenter vos décisions ou observations.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const actionRapideRadios = document.querySelectorAll('input[name="actionRapide"]');
+        const statutSelect = document.getElementById('statut');
+        const motifRejetDiv = document.getElementById('motifRejet');
+        const motifRejetText = document.getElementById('motifRejetText');
+        const form = document.querySelector('form');
+
+        // Gestion de l'affichage du champ motif de rejet
+        function toggleMotifRejet() {
+            const rejeterChecked = document.getElementById('rejeterRapide').checked;
+            const statutRejetee = statutSelect.value === 'REJETEE';
+
+            if (rejeterChecked || statutRejetee) {
+                motifRejetDiv.style.display = 'block';
+                motifRejetText.required = true;
+            } else {
+                motifRejetDiv.style.display = 'none';
+                motifRejetText.required = false;
+                motifRejetText.value = '';
+            }
+        }
+
+        // Synchronisation entre les boutons rapides et le select de statut
+        actionRapideRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    statutSelect.value = this.value;
+                    toggleMotifRejet();
+                }
+            });
+        });
+
+        statutSelect.addEventListener('change', function() {
+            // Désélectionner les boutons rapides
+            actionRapideRadios.forEach(radio => radio.checked = false);
+
+            // Cocher le bouton correspondant si applicable
+            const matchingRadio = document.querySelector(`input[name="actionRapide"][value="${this.value}"]`);
+            if (matchingRadio) {
+                matchingRadio.checked = true;
+            }
+
+            toggleMotifRejet();
+        });
+
+        // Validation du formulaire
+        form.addEventListener('submit', function(e) {
+            const statut = statutSelect.value;
+            const motifRejet = motifRejetText.value.trim();
+
+            // Validation spécifique pour le rejet
+            if (statut === 'REJETEE') {
+                if (motifRejet.length < 10) {
+                    e.preventDefault();
+                    alert('Le motif du rejet doit contenir au moins 10 caractères.');
+                    motifRejetText.focus();
+                    return false;
+                }
+
+                if (!confirm('Êtes-vous sûr de vouloir rejeter cette candidature ? Un email sera envoyé au candidat avec le motif spécifié.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            // Validation pour la validation
+            if (statut === 'VALIDEE') {
+                if (!confirm('Êtes-vous sûr de vouloir valider cette candidature ? Un email de confirmation sera envoyé au candidat.')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+
+        // Initialisation
+        toggleMotifRejet();
+    });
+</script>
+</body>
+</html>

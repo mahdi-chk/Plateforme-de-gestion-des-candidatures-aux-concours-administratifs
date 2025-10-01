@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Candidature Soumise - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+            --vert-succes: #28a745;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .success-container {
+            max-width: 700px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .success-icon {
+            color: var(--vert-succes);
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .success-title {
+            color: var(--vert-succes);
+            margin-bottom: 20px;
+        }
+
+        .candidature-number {
+            background: linear-gradient(135deg, var(--bleu-mef), #0079d3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 30px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .info-card {
+            background-color: #e7f3ff;
+            border-left: 4px solid var(--bleu-mef);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .btn-action {
+            margin: 10px;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--bleu-mef);
+            border-color: var(--bleu-mef);
+        }
+
+        .btn-primary:hover {
+            background-color: #003f80;
+            border-color: #003f80;
+        }
+    </style>
+</head>
+<body>
+<!-- En-tête simplifié -->
+<header style="background-color: white; padding: 15px 0; border-bottom: 1px solid #e0e0e0;">
+    <div class="container">
+        <div class="d-flex align-items-center">
+            <img src="https://imgs.search.brave.com/_sQmz83PoFynMn9wl0RNhXY0yh8yKwDM0fXEtyPgd3Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9rZy93aWtpcGVk/aWEvY29tbW9ucy9j/L2NiL01FRl9NT1JP/Q0NPLnBuZw"
+                 alt="Logo Ministère" style="height: 60px; margin-right: 15px;">
+            <div>
+                <h5 style="color: #0056b3; margin-bottom: 0;">Ministère de l'économie et des finances</h5>
+                <p style="margin-bottom: 0; color: #6c757d; font-size: 0.9rem;">Portail des Concours Administratifs</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Contenu principal -->
+<div class="container">
+    <div class="success-container">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h1 class="success-title">Candidature soumise avec succès !</h1>
+
+        <p class="lead text-muted">
+            Votre candidature a été enregistrée et sera examinée par nos services.
+        </p>
+
+        <!-- CORRECTION : Utilisation du bon nom d'attribut -->
+        <div th:if="${numero}" class="candidature-number">
+            <i class="fas fa-id-card me-2"></i>
+            Numéro de candidature : <span th:text="${numero}">XXXX-XXXX-XXXX</span>
+        </div>
+
+        <div class="info-card">
+            <h5><i class="fas fa-info-circle me-2"></i>Informations importantes</h5>
+            <ul class="list-unstyled text-start">
+                <li><i class="fas fa-envelope me-2 text-primary"></i>Un email de confirmation vous a été envoyé</li>
+                <li><i class="fas fa-save me-2 text-primary"></i>Conservez précieusement votre numéro de candidature</li>
+                <li><i class="fas fa-clock me-2 text-primary"></i>Le traitement peut prendre plusieurs jours</li>
+                <li><i class="fas fa-bell me-2 text-primary"></i>Vous serez notifié de l'évolution de votre dossier</li>
+            </ul>
+        </div>
+
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Important :</strong> Notez votre numéro de candidature, il vous sera demandé pour suivre l'évolution de votre dossier.
+        </div>
+
+        <!-- Actions disponibles -->
+        <div class="mt-4">
+            <a th:href="@{'/public/candidature/' + ${numero}}" class="btn btn-primary btn-action">
+                <i class="fas fa-eye me-2"></i>Voir ma candidature
+            </a>
+
+            <a th:href="@{/public/suivi}" class="btn btn-primary btn-action">
+                <i class="fas fa-search me-2"></i>Suivre ma candidature
+            </a>
+
+            <a th:href="@{/public/candidature}" class="btn btn-outline-secondary btn-action">
+                <i class="fas fa-plus me-2"></i>Nouvelle candidature
+            </a>
+
+            <a th:href="@{/public/}" class="btn btn-outline-primary btn-action">
+                <i class="fas fa-home me-2"></i>Retour à l'accueil
+            </a>
+        </div>
+
+        <!-- Prochaines étapes -->
+        <div class="mt-5 text-start">
+            <h6 class="text-primary"><i class="fas fa-list-ol me-2"></i>Prochaines étapes</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="badge bg-primary rounded-circle me-3" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">1</div>
+                        <div>
+                            <strong>Examen des documents</strong>
+                            <small class="d-block text-muted">Vérification de la conformité</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex mb-3">
+                        <div class="badge bg-primary rounded-circle me-3" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">2</div>
+                        <div>
+                            <strong>Validation du dossier</strong>
+                            <small class="d-block text-muted">Notification par email/SMS</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pied de page -->
+<footer style="background-color: #2c3e50; color: white; padding: 2rem 0; margin-top: 3rem;">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2025 Ministère de l'économie et des finances. Tous droits réservés.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Animation d'apparition
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.success-container');
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            container.style.transition = 'all 0.8s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 100);
+    });
+</script>
+</body>
+</html>

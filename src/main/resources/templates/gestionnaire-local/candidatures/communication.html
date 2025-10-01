@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Communication avec candidat - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+            --rouge-alerte: #dc3545;
+            --vert-success: #198754;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-container {
+            max-width: 900px;
+            margin: 30px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .candidat-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid var(--bleu-mef);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+
+        .form-floating textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 25px;
+        }
+
+        .template-btn {
+            transition: all 0.2s ease;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            text-align: left;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+
+        .template-btn:hover {
+            background-color: #e9ecef;
+            border-color: var(--bleu-mef);
+            transform: translateX(5px);
+        }
+
+        .character-count {
+            font-size: 0.85rem;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .character-count.warning {
+            color: #fd7e14;
+            font-weight: 500;
+        }
+
+        .character-count.danger {
+            color: var(--rouge-alerte);
+            font-weight: 600;
+        }
+
+        .info-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .badge-primary {
+            background-color: rgba(0, 86, 179, 0.1);
+            color: var(--bleu-mef);
+        }
+
+        .badge-success {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: var(--vert-success);
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #fd7e14;
+        }
+
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--rouge-alerte);
+        }
+
+        .error-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .error-icon {
+            font-size: 5rem;
+            color: var(--rouge-alerte);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <!-- Header -->
+    <div class="header-container">
+        <div>
+            <h2 class="text-primary"><i class="fas fa-envelope me-2"></i>Communication avec le candidat</h2>
+            <p class="text-muted">Envoyez un message personnalisé au candidat</p>
+        </div>
+        <a th:href="@{/gestionnaire-local/candidatures/list}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+        </a>
+    </div>
+
+    <!-- Alertes -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show d-flex align-items-center">
+        <i class="fas fa-check-circle me-2 fs-5"></i>
+        <div>
+            <span th:text="${success}"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show d-flex align-items-center">
+        <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+        <div>
+            <h5 class="alert-heading mb-1">Erreur d'accès</h5>
+            <span th:text="${error}"></span>
+            <div class="mt-2">
+                <a th:href="@{/gestionnaire-local/candidatures/validation}" class="btn btn-sm btn-outline-danger">
+                    Retourner aux candidatures
+                </a>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Vérification de la disponibilité des données candidature -->
+    <div th:if="${candidature == null}">
+        <div class="error-container">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="text-danger">Données de candidature non disponibles</h3>
+            <p class="text-muted">Les informations de la candidature n'ont pas pu être chargées.</p>
+            <a th:href="@{/gestionnaire-local/candidatures/validation}" class="btn btn-primary mt-3">
+                <i class="fas fa-arrow-left me-1"></i> Retour aux candidatures
+            </a>
+        </div>
+    </div>
+
+    <!-- Informations du candidat -->
+    <div th:if="${candidature != null}" class="candidat-info">
+        <h5 class="mb-3"><i class="fas fa-user me-2"></i>Informations du candidat</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Nom :</strong> <span th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}">Nom Prénom</span></p>
+                <p><strong>Email :</strong> <span th:text="${candidature.candidatEmail}">email@example.com</span></p>
+                <p><strong>Téléphone :</strong> <span th:text="${candidature.candidatTelephone != null ? candidature.candidatTelephone : 'Non renseigné'}">+212 6 XX XX XX XX</span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>N° Candidature :</strong> <span class="info-badge badge-primary" th:text="${candidature.numero}">CAND-20250827-A1B2</span></p>
+                <p><strong>Concours :</strong> <span th:text="${candidature.concoursTitre}">Concours A</span></p>
+                <p><strong>Spécialité :</strong> <span th:text="${candidature.specialiteLibelle}">Spécialité</span></p>
+                <p><strong>Statut :</strong>
+                    <span class="info-badge"
+                          th:class="${candidature.statut == 'VALIDEE'} ? 'badge-success' :
+                                    (${candidature.statut == 'REJETEE'} ? 'badge-danger' : 'badge-warning')"
+                          th:text="${candidature.statut}">EN_ATTENTE</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'envoi de message -->
+    <div th:if="${candidature != null}" class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Envoyer un message</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{'/gestionnaire-local/candidatures/envoyer-message/' + ${candidature.numero}}"
+                  method="post" th:object="${messageForm}">
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="sujet" th:field="*{sujet}"
+                           placeholder="Sujet du message" maxlength="200" required>
+                    <label for="sujet">Sujet du message *</label>
+                    <div class="character-count" id="sujet-count">200 caractères restants</div>
+                    <div th:if="${#fields.hasErrors('sujet')}" class="text-danger mt-1">
+                        <small th:errors="*{sujet}"></small>
+                    </div>
+                </div>
+
+                <div class="form-floating mb-4">
+                    <textarea class="form-control" id="contenu" th:field="*{contenu}"
+                              placeholder="Contenu du message" maxlength="2000" required
+                              style="min-height: 180px;"></textarea>
+                    <label for="contenu">Contenu du message *</label>
+                    <div class="character-count" id="contenu-count">2000 caractères restants</div>
+                    <div th:if="${#fields.hasErrors('contenu')}" class="text-danger mt-1">
+                        <small th:errors="*{contenu}"></small>
+                    </div>
+                </div>
+
+                <div class="alert alert-info bg-light border-0">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    <strong>Information :</strong> Le candidat recevra ce message par email et pourra vous répondre directement.
+                    Votre adresse email sera indiquée comme expéditeur.
+                </div>
+
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <button type="button" class="btn btn-lg btn-outline-secondary" onclick="history.back()">
+                        <i class="fas fa-times me-1"></i> Annuler
+                    </button>
+                    <button type="submit" class="btn btn-lg btn-mef">
+                        <i class="fas fa-paper-plane me-1"></i> Envoyer le message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modèles de messages prédéfinis -->
+    <div th:if="${candidature != null}" class="card mt-4 border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="fas fa-templates me-2"></i>Modèles de messages prédéfinis</h6>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">Cliquez sur un modèle pour l'utiliser directement dans le formulaire</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <button type="button" class="btn template-btn w-100"
+                            onclick="utiliserModele('Documents manquants', 'Bonjour,\n\nNous avons examiné votre candidature mais certains documents semblent manquants ou illisibles. Pourriez-vous nous faire parvenir :\n\n- [Préciser les documents]\n\nNous vous rappelons que vous avez 72 heures pour compléter votre dossier.\n\nCordialement,\nLe service des concours')">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-pdf text-danger me-2"></i>
+                            <div>
+                                <strong>Documents manquants</strong>
+                                <div class="small text-muted">Demande de documents complémentaires</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button type="button" class="btn template-btn w-100"
+                            onclick="utiliserModele('Informations complémentaires', 'Bonjour,\n\nPour traiter votre candidature, nous aurions besoin des informations complémentaires suivantes :\n\n- [Préciser les informations demandées]\n\nMerci de nous répondre dans les plus brefs délais.\n\nCordialement,\nLe service des concours')">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            <div>
+                                <strong>Informations complémentaires</strong>
+                                <div class="small text-muted">Demande d'informations supplémentaires</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="btn template-btn w-100"
+                            onclick="utiliserModele('Convocation entretien', 'Bonjour,\n\nVotre candidature a été retenue pour la phase suivante. Vous êtes convoqué(e) à un entretien :\n\nDate : [À préciser]\nHeure : [À préciser]\nLieu : [À préciser]\n\nVeuillez confirmer votre présence dans les 48 heures.\n\nCordialement,\nLe service des concours')">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-check text-success me-2"></i>
+                            <div>
+                                <strong>Convocation entretien</strong>
+                                <div class="small text-muted">Invitation à un entretien</div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button type="button" class="btn template-btn w-100"
+                            onclick="utiliserModele('Statut candidature', 'Bonjour,\n\nNous faisons suite à votre candidature n° ' + document.getElementById('candidatureNumero').value + '.\n\n[Préciser le statut et les prochaines étapes]\n\nRestant à votre disposition pour toute information complémentaire.\n\nCordialement,\nLe service des concours')">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-tasks text-warning me-2"></i>
+                            <div>
+                                <strong>Mise à jour statut</strong>
+                                <div class="small text-muted">Information sur l\'état d\'avancement</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="candidatureNumero" th:value="${candidature != null ? candidature.numero : ''}">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Initialisation des compteurs de caractères
+    document.addEventListener('DOMContentLoaded', function() {
+        const sujetInput = document.getElementById('sujet');
+        const contenuInput = document.getElementById('contenu');
+
+        if (sujetInput) {
+            sujetInput.addEventListener('input', updateSujetCount);
+            updateSujetCount.call(sujetInput);
+        }
+
+        if (contenuInput) {
+            contenuInput.addEventListener('input', updateContenuCount);
+            updateContenuCount.call(contenuInput);
+        }
+    });
+
+    function updateSujetCount() {
+        const remaining = 200 - this.value.length;
+        const countElement = document.getElementById('sujet-count');
+
+        countElement.textContent = `${remaining} caractères restants`;
+
+        if (remaining < 20) {
+            countElement.classList.add('warning');
+            countElement.classList.remove('danger');
+        } else if (remaining < 0) {
+            countElement.classList.remove('warning');
+            countElement.classList.add('danger');
+        } else {
+            countElement.classList.remove('warning', 'danger');
+        }
+    }
+
+    function updateContenuCount() {
+        const remaining = 2000 - this.value.length;
+        const countElement = document.getElementById('contenu-count');
+
+        countElement.textContent = `${remaining} caractères restants`;
+
+        if (remaining < 100) {
+            countElement.classList.add('warning');
+            countElement.classList.remove('danger');
+        } else if (remaining < 0) {
+            countElement.classList.remove('warning');
+            countElement.classList.add('danger');
+        } else {
+            countElement.classList.remove('warning', 'danger');
+        }
+    }
+
+    function utiliserModele(sujet, contenu) {
+        document.getElementById('sujet').value = sujet;
+        document.getElementById('contenu').value = contenu;
+
+        // Mettre à jour les compteurs
+        updateSujetCount.call(document.getElementById('sujet'));
+        updateContenuCount.call(document.getElementById('contenu'));
+
+        // Focus sur le champ contenu pour permettre la modification
+        document.getElementById('contenu').focus();
+
+        // Scroll to form
+        document.getElementById('contenu').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+</script>
+</body>
+</html>

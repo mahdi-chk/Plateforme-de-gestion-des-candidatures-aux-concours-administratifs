@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistiques - Tableau de bord Gestionnaire Global</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1a56db;
+            --secondary-color: #046c4e;
+            --accent-color: #9061f9;
+            --warning-color: #d97706;
+            --danger-color: #e02424;
+            --sidebar-bg: #ffffff;
+            --sidebar-width: 280px;
+            --text-color: #1f2937;
+            --light-bg: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0.5rem 0 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-header h4 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-header h4 i {
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-color);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar .nav-link i {
+            width: 1.5rem;
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(26, 86, 219, 0.1);
+            color: var(--primary-color);
+        }
+
+        .sidebar .nav-link.active {
+            font-weight: 600;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .welcome-text h5 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .welcome-text small {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .stat-card {
+            border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            background-color: white;
+            height: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.stat-card-success {
+            border-top-color: var(--secondary-color);
+        }
+
+        .stat-card.stat-card-warning {
+            border-top-color: var(--warning-color);
+        }
+
+        .stat-card.stat-card-purple {
+            border-top-color: var(--accent-color);
+        }
+
+        .stat-card.stat-card-danger {
+            border-top-color: var(--danger-color);
+        }
+
+        .stat-card i {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .stat-card.stat-card-success i {
+            color: var(--secondary-color);
+        }
+
+        .stat-card.stat-card-warning i {
+            color: var(--warning-color);
+        }
+
+        .stat-card.stat-card-purple i {
+            color: var(--accent-color);
+        }
+
+        .stat-card.stat-card-danger i {
+            color: var(--danger-color);
+        }
+
+        .stat-card h3 {
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+
+        .stat-card p {
+            color: #6b7280;
+            margin-bottom: 1.25rem;
+        }
+
+        .chart-container {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        .refresh-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background-color: #1e40af;
+        }
+
+        .table-responsive {
+            background-color: white;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .badge-success {
+            background-color: var(--secondary-color);
+        }
+
+        .badge-warning {
+            background-color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background-color: var(--danger-color);
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .export-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-group .btn {
+            margin-left: 0.5rem;
+        }
+
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success:hover {
+            background-color: #035c3f;
+            border-color: #035c3f;
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h4><i class="fas fa-tachometer-alt"></i> Tableau de bord</h4>
+    </div>
+    <nav class="nav flex-column">
+        <a th:href="@{/gestionnaire-global/dashboard}" class="nav-link"><i class="fas fa-home"></i> Accueil</a>
+        <a th:href="@{/gestionnaire-global/gestion-candidatures/list}" class="nav-link"><i class="fas fa-folder-open"></i> Candidatures</a>
+        <a th:href="@{/gestionnaire-global/gestion-concours/list}" class="nav-link"><i class="fas fa-trophy"></i> Concours</a>
+        <a th:href="@{/gestionnaire-global/gestion-centres/list}" class="nav-link"><i class="fas fa-building"></i> Centres</a>
+        <a th:href="@{/gestionnaire-global/reporting/statistiques}" class="nav-link active"><i class="fas fa-chart-line"></i> Statistiques</a>
+        <a th:href="@{/gestionnaire-global/profile}" class="nav-link"><i class="fas fa-user-edit"></i> Profil</a>
+    </nav>
+</div>
+
+<div class="main-content">
+    <div class="header">
+        <div class="welcome-text">
+            <h5>Statistiques du système</h5>
+            <small id="currentTime"></small>
+        </div>
+        <div>
+            <a th:href="@{/gestionnaire-global/reporting/statistiques/refresh}" class="refresh-btn me-2">
+                <i class="fas fa-sync-alt me-1"></i> Actualiser
+            </a>
+            <form th:action="@{/auth/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fas fa-sign-out-alt me-1"></i> Déconnexion
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="export-buttons mb-4">
+        <div class="btn-group">
+            <a th:href="@{/gestionnaire-global/reporting/statistiques/export/excel}" class="btn btn-success">
+                <i class="fas fa-file-excel me-2"></i> Exporter en Excel
+            </a>
+            <a th:href="@{/gestionnaire-global/reporting/statistiques/export/pdf}" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-2"></i> Exporter en PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Statistiques générales -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <i class="fas fa-trophy"></i>
+                <h3 th:text="${stats.nbConcours}">0</h3>
+                <p>Concours</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-card-success text-center">
+                <i class="fas fa-file-alt"></i>
+                <h3 th:text="${stats.totalCandidatures}">0</h3>
+                <p>Total candidatures</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-card-purple text-center">
+                <i class="fas fa-chart-pie"></i>
+                <h3 th:text="${#maps.size(stats.candidaturesParConcours)}">0</h3>
+                <p>Concours avec candidatures</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-card-purple text-center">
+                <i class="fas fa-building"></i>
+                <h3 th:text="${stats.nbCentres}">0</h3>
+                <p>Centres d'examen</p>
+            </div>
+    </div>
+
+    <!-- Répartition des statuts de candidatures -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card stat-card-success text-center">
+                <i class="fas fa-check-circle"></i>
+                <h3 th:text="${stats.candidaturesValidees}">0</h3>
+                <p>Candidatures validées</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-warning text-center">
+                <i class="fas fa-clock"></i>
+                <h3 th:text="${stats.candidaturesEnAttente}">0</h3>
+                <p>Candidatures en attente</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-danger text-center">
+                <i class="fas fa-times-circle"></i>
+                <h3 th:text="${stats.candidaturesRejetees}">0</h3>
+                <p>Candidatures rejetées</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableaux détaillés -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="chart-title">Détail par concours</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Concours</th>
+                            <th>Nombre de candidatures</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry : ${stats.candidaturesParConcours}">
+                            <td th:text="${entry.key}">Nom du concours</td>
+                            <td th:text="${entry.value}">0</td>
+                        </tr>
+                        <tr th:if="${#maps.isEmpty(stats.candidaturesParConcours)}">
+                            <td colspan="2" class="text-center">Aucune donnée disponible</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h5 class="chart-title">Détail par spécialité</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Spécialité</th>
+                            <th>Nombre de candidatures</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry : ${stats.candidaturesParSpecialite}">
+                            <td th:text="${entry.key}">Nom de la spécialité</td>
+                            <td th:text="${entry.value}">0</td>
+                        </tr>
+                        <tr th:if="${#maps.isEmpty(stats.candidaturesParSpecialite)}">
+                            <td colspan="2" class="text-center">Aucune donnée disponible</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateTime() {
+        const now = new Date();
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        };
+        document.getElementById("currentTime").textContent = now.toLocaleDateString('fr-FR', options);
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Candidatures par concours
+        const concoursCtx = document.getElementById('concoursChart').getContext('2d');
+        const concoursLabels = /*[[${concoursLabels}]]*/ [];
+        const concoursData = /*[[${concoursData}]]*/ [];
+
+        new Chart(concoursCtx, {
+            type: 'bar',
+            data: {
+                labels: concoursLabels,
+                datasets: [{
+                    label: 'Candidatures',
+                    data: concoursData,
+                    backgroundColor: 'rgba(26, 86, 219, 0.7)',
+                    borderColor: 'rgba(26, 86, 219, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Candidatures par statut
+        const statutCtx = document.getElementById('statutChart').getContext('2d');
+        new Chart(statutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Validées', 'En attente', 'Rejetées'],
+                datasets: [{
+                    data: [
+                        /*[[${stats.candidaturesValidees}]]*/ 0,
+                        /*[[${stats.candidaturesEnAttente}]]*/ 0,
+                        /*[[${stats.candidaturesRejetees}]]*/ 0
+                    ],
+                    backgroundColor: [
+                        'rgba(4, 108, 78, 0.7)',
+                        'rgba(217, 119, 6, 0.7)',
+                        'rgba(224, 36, 36, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(4, 108, 78, 1)',
+                        'rgba(217, 119, 6, 1)',
+                        'rgba(224, 36, 36, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+
+        // Candidatures par spécialité
+        const specialiteCtx = document.getElementById('specialiteChart').getContext('2d');
+        const specialiteLabels = /*[[${specialiteLabels}]]*/ [];
+        const specialiteData = /*[[${specialiteData}]]*/ [];
+
+        new Chart(specialiteCtx, {
+            type: 'pie',
+            data: {
+                labels: specialiteLabels,
+                datasets: [{
+                    data: specialiteData,
+                    backgroundColor: [
+                        'rgba(26, 86, 219, 0.7)',
+                        'rgba(4, 108, 78, 0.7)',
+                        'rgba(144, 97, 249, 0.7)',
+                        'rgba(217, 119, 6, 0.7)',
+                        'rgba(224, 36, 36, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+
+        // Candidatures par mois
+        const moisCtx = document.getElementById('moisChart').getContext('2d');
+        const moisLabels = /*[[${moisLabels}]]*/ [];
+        const moisData = /*[[${moisData}]]*/ [];
+
+        new Chart(moisCtx, {
+            type: 'line',
+            data: {
+                labels: moisLabels,
+                datasets: [{
+                    label: 'Candidatures',
+                    data: moisData,
+                    fill: false,
+                    backgroundColor: 'rgba(144, 97, 249, 0.7)',
+                    borderColor: 'rgba(144, 97, 249, 1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Créer un Centre d'Examen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-title {
+            color: var(--bleu-mef);
+            margin-bottom: 25px;
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            font-weight: 500;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <form class="form-container" th:action="@{/admin/centres/save}" th:object="${centre}" method="post">
+        <h2 class="form-title text-center">
+            <i class="fas fa-building me-2"></i>Créer un Centre d'Examen
+        </h2>
+
+        <!-- Message d'erreur -->
+        <div th:if="${error}" class="alert alert-danger mb-3">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}">Erreur</span>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Code :</label>
+                <input type="text" class="form-control" th:field="*{code}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Capacité :</label>
+                <input type="number" class="form-control" th:field="*{capacite}" min="1" required>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Ville :</label>
+                <select class="form-select" th:field="*{villeId}" required>
+                    <option value="">-- Sélectionner une ville --</option>
+                    <option th:each="v : ${villes}" th:value="${v.id}" th:text="${v.nom}"></option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Spécialité(s) :</label>
+                <select class="form-select" th:field="*{specialiteIds}" multiple size="4" required>
+                    <option th:each="s : ${specialites}" th:value="${s.id}" th:text="${s.libelle}"></option>
+                </select>
+                <small class="text-muted">Maintenez Ctrl (Windows) ou Cmd (Mac) pour sélectionner plusieurs options</small>
+            </div>
+        </div>
+
+        <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" th:field="*{actif}" id="actif" checked>
+            <label class="form-check-label" for="actif">Centre actif</label>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a th:href="@{/admin/centres/list}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Retour
+            </a>
+            <button type="submit" class="btn btn-mef">
+                <i class="fas fa-save me-1"></i> Enregistrer
+            </button>
+        </div>
+    </form>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

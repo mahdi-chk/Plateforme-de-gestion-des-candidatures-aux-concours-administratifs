@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Validation des candidatures - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body { background-color: var(--gris-fond); }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+        }
+
+        .card-candidature {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        .badge-status {
+            font-size: 0.85em;
+        }
+
+        .action-buttons .btn {
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-check-circle me-2 text-primary"></i>Validation des candidatures</h2>
+        <div>
+            <a th:href="@{/gestionnaire-local/candidatures/list}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-list"></i> Toutes les candidatures
+            </a>
+            <a th:href="@{/gestionnaire-local/dashboard}" class="btn btn-outline-primary">
+                <i class="fas fa-home"></i> Tableau de bord
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Statut</label>
+                    <select name="statutFiltre" class="form-select">
+                        <option value="EN_ATTENTE" th:selected="${statutFiltre == 'EN_ATTENTE'}">En attente</option>
+                        <option value="VALIDEE" th:selected="${statutFiltre == 'VALIDEE'}">Validées</option>
+                        <option value="REJETEE" th:selected="${statutFiltre == 'REJETEE'}">Rejetées</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-mef">
+                        <i class="fas fa-filter me-1"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h5><i class="fas fa-clock"></i> En attente</h5>
+                    <h3 th:text="${totalElements}">1</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des candidatures -->
+    <div class="row">
+        <div th:each="candidature : ${candidatures}" class="col-md-6 mb-3">
+            <div class="card card-candidature">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0" th:text="${candidature.numero}">CAND-20250827-A1B2</h6>
+                    <span class="badge badge-status"
+                          th:classappend="${candidature.statut == 'VALIDEE'} ? 'bg-success' :
+                                         (candidature.statut == 'REJETEE') ? 'bg-danger' : 'bg-warning'"
+                          th:text="${candidature.statut}">EN_ATTENTE</span>
+                </div>
+                <div class="card-body">
+                    <h6 th:text="${candidature.candidat.nom + ' ' + candidature.candidat.prenom}">Nom Prénom</h6>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        <span th:text="${candidature.specialite.libelle}">Spécialité</span>
+                    </p>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-calendar me-1"></i>
+                        Déposée le <span th:text="${#temporals.format(candidature.dateDepot, 'dd/MM/yyyy')}">01/01/2025</span>
+                    </p>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-envelope me-1"></i>
+                        <span th:text="${candidature.candidat.email}">email@example.com</span>
+                    </p>
+
+                    <!-- Actions -->
+                    <div class="action-buttons d-flex flex-wrap">
+                        <a th:href="@{'/gestionnaire-local/candidatures/details/' + ${candidature.numero}}"
+                           class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-eye"></i> Détails
+                        </a>
+
+                        <!-- Actions de validation pour candidatures en attente -->
+                        <div th:if="${candidature.statut == 'EN_ATTENTE'}">
+                            <form th:action="@{'/gestionnaire-local/candidatures/valider/' + ${candidature.numero}}"
+                                  method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-success"
+                                        onclick="return confirm('Valider cette candidature ?')">
+                                    <i class="fas fa-check"></i> Valider
+                                </button>
+                            </form>
+
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    data-bs-toggle="modal" th:data-bs-target="'#rejectModal' + ${candidature.numero}">
+                                <i class="fas fa-times"></i> Rejeter
+                            </button>
+                        </div>
+
+                        <a th:href="@{'/gestionnaire-local/candidatures/communication/' + ${candidature.numero}}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-envelope"></i> Contacter
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de rejet -->
+            <div class="modal fade" th:id="'rejectModal' + ${candidature.numero}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form th:action="@{'/gestionnaire-local/candidatures/rejeter/' + ${candidature.numero}}" method="post">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Rejeter la candidature</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="motif" class="form-label">Motif du rejet *</label>
+                                    <textarea class="form-control" id="motif" name="motif" rows="4"
+                                              placeholder="Veuillez préciser le motif du rejet..." required></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-danger">Confirmer le rejet</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div th:if="${totalPages > 1}" class="d-flex justify-content-center mt-4">
+        <nav>
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/gestionnaire-local/candidatures/validation(page=${currentPage - 1}, statutFiltre=${statutFiltre})}">
+                        Précédent
+                    </a>
+                </li>
+                <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                    class="page-item" th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/gestionnaire-local/candidatures/validation(page=${i}, statutFiltre=${statutFiltre})}"
+                       th:text="${i + 1}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/gestionnaire-local/candidatures/validation(page=${currentPage + 1}, statutFiltre=${statutFiltre})}">
+                        Suivant
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Message si aucune candidature -->
+    <div th:if="${candidatures.empty}" class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Aucune candidature à traiter</h5>
+        <p class="text-muted">Il n'y a actuellement aucune candidature correspondant aux critères sélectionnés.</p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

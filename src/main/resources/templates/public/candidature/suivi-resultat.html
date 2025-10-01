@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails de la Candidature - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+            --vert-succes: #28a745;
+            --orange-attente: #ffc107;
+            --rouge-rejet: #dc3545;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .details-container {
+            max-width: 900px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header-candidature {
+            background: linear-gradient(135deg, var(--bleu-mef), #0079d3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .statut-badge {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-block;
+            margin-top: 15px;
+        }
+
+        .statut-EN_ATTENTE {
+            background-color: var(--orange-attente);
+            color: #333;
+        }
+
+        .statut-VALIDEE {
+            background-color: var(--vert-succes);
+            color: white;
+        }
+
+        .statut-REJETEE {
+            background-color: var(--rouge-rejet);
+            color: white;
+        }
+
+        .info-section {
+            padding: 30px;
+        }
+
+        .info-card {
+            border: none;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card-header {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-bottom: 2px solid var(--bleu-mef);
+            padding: 15px 20px;
+            font-weight: 600;
+            color: var(--bleu-mef);
+        }
+
+        .progress-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-icon.completed {
+            background-color: var(--vert-succes);
+            color: white;
+        }
+
+        .timeline-icon.current {
+            background-color: var(--orange-attente);
+            color: #333;
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-icon.pending {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .documents-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .documents-list li {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 4px solid var(--bleu-mef);
+        }
+
+        .btn-action {
+            margin: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .alert-info-custom {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: none;
+            border-left: 4px solid var(--bleu-mef);
+            color: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+<!-- En-tête -->
+<header style="background-color: white; padding: 15px 0; border-bottom: 1px solid #e0e0e0;">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="https://imgs.search.brave.com/_sQmz83PoFynMn9wl0RNhXY0yh8yKwDM0fXEtyPgd3Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy9j/L2NiL01FRl9NT1JP/Q0NPLnBuZw"
+                 alt="Logo Ministère" style="height: 70px; margin-right: 15px;">
+            <div>
+                <h4 style="color: #0056b3; margin-bottom: 0;">Ministère de l'économie et des finances</h4>
+                <p style="margin-bottom: 0; color: #6c757d;">Portail des Concours Administratifs</p>
+            </div>
+        </div>
+        <div class="d-none d-md-block">
+            <a th:href="@{/public/}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-home me-1"></i> Accueil
+            </a>
+            <a th:href="@{/public/suivi}" class="btn btn-outline-secondary">
+                <i class="fas fa-search me-1"></i> Nouveau suivi
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0056b3;">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/public/}">
+            <i class="fas fa-trophy me-2"></i>Concours MEF
+        </a>
+        <div class="navbar-nav">
+            <a class="nav-link" th:href="@{/public/}"><i class="fas fa-home me-1"></i> Accueil</a>
+            <a class="nav-link active" th:href="@{/public/suivi}"><i class="fas fa-search me-1"></i> Suivi</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
+<div class="container">
+    <div class="details-container">
+        <!-- En-tête avec statut -->
+        <div class="header-candidature">
+            <h2><i class="fas fa-user-graduate me-2"></i>Candidature de <span th:text="${candidature.candidatPrenom + ' ' + candidature.candidatNom}">Prénom Nom</span></h2>
+            <p class="mb-2">Numéro : <strong th:text="${candidature.numero}">XXXX-XXXX-XXXX</strong></p>
+            <p class="mb-2">CIN : <strong th:text="${candidature.candidatCin}">XX123456</strong></p>
+
+            <div class="statut-badge"
+                 th:classappend="'statut-' + ${candidature.statut}"
+                 th:switch="${candidature.statut}">
+                <span th:case="EN_ATTENTE"><i class="fas fa-clock me-2"></i>En attente de traitement</span>
+                <span th:case="VALIDEE"><i class="fas fa-check-circle me-2"></i>Candidature validée</span>
+                <span th:case="REJETEE"><i class="fas fa-times-circle me-2"></i>Candidature rejetée</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <!-- Timeline de progression -->
+            <div class="card info-card">
+                <div class="info-card-header">
+                    <i class="fas fa-tasks me-2"></i>État d'avancement
+                </div>
+                <div class="card-body">
+                    <div class="progress-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-icon completed">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Candidature soumise</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <span th:text="${#temporals.format(candidature.dateDepot, 'dd/MM/yyyy')}">01/01/2025</span>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-icon"
+                                 th:classappend="${candidature.statut == 'EN_ATTENTE' ? 'current' : 'completed'}">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Examen du dossier</h6>
+                                <small class="text-muted" th:if="${candidature.statut == 'EN_ATTENTE'}">
+                                    En cours de traitement...
+                                </small>
+                                <small class="text-success" th:if="${candidature.statut != 'EN_ATTENTE'}">
+                                    <i class="fas fa-check me-1"></i>Traitement terminé
+                                </small>
+                            </div>
+                        </div>
+
+<!--                        <div class="timeline-item">-->
+<!--                            <div class="timeline-icon"-->
+<!--                                 th:classappend="${candidature.statut == 'VALIDEE' ? 'completed' : (candidature.statut == 'REJETEE' ? 'completed' : 'pending')}">-->
+<!--                                <i class="fas fa-flag-checkered"></i>-->
+<!--                            </div>-->
+<!--&lt;!&ndash;                            <div class="timeline-content">&ndash;&gt;-->
+<!--&lt;!&ndash;                                <h6 class="mb-1">Décision finale</h6>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <small class="text-muted" th:if="${candidature.statut == 'EN_ATTENTE'}">&ndash;&gt;-->
+<!--&lt;!&ndash;                                    En attente de décision&ndash;&gt;-->
+<!--&lt;!&ndash;                                </small>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <small class="text-success" th:if="${candidature.statut == 'VALIDEE'}">&ndash;&gt;-->
+<!--&lt;!&ndash;                                    <i class="fas fa-thumbs-up me-1"></i>Candidature acceptée&ndash;&gt;-->
+<!--&lt;!&ndash;                                </small>&ndash;&gt;-->
+<!--&lt;!&ndash;                                <small class="text-danger" th:if="${candidature.statut == 'REJETEE'}">&ndash;&gt;-->
+<!--&lt;!&ndash;                                    <i class="fas fa-thumbs-down me-1"></i>Candidature non retenue&ndash;&gt;-->
+<!--&lt;!&ndash;                                </small>&ndash;&gt;-->
+<!--&lt;!&ndash;                            </div>&ndash;&gt;-->
+<!--                        </div>-->
+<!--                    </div>-->
+                </div>
+            </div>
+
+            <!-- Informations du concours -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card info-card">
+                        <div class="info-card-header">
+                            <i class="fas fa-trophy me-2"></i>Informations du concours
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Concours :</strong> <span th:text="${candidature.concoursTitre}">Titre du concours</span></p>
+                            <p><strong>Référence :</strong> <span th:text="'REF-00'+${candidature.centreCode}">REF-001</span></p>
+                            <p><strong>Spécialité :</strong> <span th:text="${candidature.specialiteLibelle}">Spécialité</span></p>
+                            <p class="mb-0"><strong>Centre d'examen :</strong> <span th:text="${candidature.centreCode + ' - ' + candidature.centreVille}">Centre - Ville</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card info-card">
+                        <div class="info-card-header">
+                            <i class="fas fa-user me-2"></i>Informations candidat
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Nom complet :</strong> <span th:text="${candidature.candidatPrenom + ' ' + candidature.candidatNom}">Prénom Nom</span></p>
+                            <p><strong>CIN :</strong> <span th:text="${candidature.candidatCin}">XX123456</span></p>
+                            <p><strong>Email :</strong> <span th:text="${candidature.candidatEmail}">email@example.com</span></p>
+                            <p class="mb-0"><strong>Notifications :</strong>
+                                <span th:switch="${candidature.notifications}">
+                                    <span th:case="EMAIL">Email uniquement</span>
+                                    <span th:case="SMS">SMS uniquement</span>
+                                    <span th:case="LES_DEUX">Email et SMS</span>
+                                </span>
+                                <span th:text='Email'>email@example.com</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <div class="card info-card" th:if="${candidature.documents != null and !candidature.documents.empty}">
+                    <div class="info-card-header">
+                        <i class="fas fa-file-alt me-2"></i>Documents soumis
+                    </div>
+                    <div class="card-body">
+                        <ul class="documents-list">
+                            <!-- Afficher seulement les 3 premiers documents -->
+                            <li th:each="doc, iterStat : ${candidature.documents}" th:if="${iterStat.index < 3}">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i>
+                                <span th:switch="${doc.type}">
+                    <span th:case="CV">Curriculum Vitae</span>
+                    <span th:case="CIN">Copie de la CIN</span>
+                    <span th:case="DIPLOME">Diplôme</span>
+                    <span th:case="*">Document</span>
+                </span>
+                                <span class="text-success ms-2"><i class="fas fa-check"></i> Reçu</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            <!-- Informations supplémentaires -->
+            <div th:if="${candidature.statut == 'EN_ATTENTE'}" class="alert alert-info-custom">
+                <h6><i class="fas fa-info-circle me-2"></i>Informations importantes</h6>
+                <ul class="mb-0">
+                    <li>Votre candidature est en cours d'examen</li>
+                    <li>Vous recevrez une notification dès qu'une décision sera prise</li>
+                    <li>Le délai de traitement est généralement de 5 à 10 jours ouvrables</li>
+                    <li>Aucune action n'est requise de votre part</li>
+                </ul>
+            </div>
+
+            <div th:if="${candidature.statut == 'VALIDEE'}" class="alert alert-success">
+                <h6><i class="fas fa-check-circle me-2"></i>Félicitations !</h6>
+                <p class="mb-0">Votre candidature a été validée. Vous recevrez prochainement des informations concernant la suite de la procédure (dates d'examen, modalités, etc.).</p>
+            </div>
+
+            <div th:if="${candidature.statut == 'REJETEE'}" class="alert alert-danger">
+                <h6><i class="fas fa-times-circle me-2"></i>Candidature non retenue</h6>
+                <p class="mb-0">Nous sommes désolés de vous informer que votre candidature n'a pas été retenue pour ce concours. Vous pouvez consulter les autres concours disponibles sur notre portail.</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="text-center mt-4">
+                <a th:href="@{/public/suivi}" class="btn btn-outline-primary btn-action">
+                    <i class="fas fa-search me-2"></i>Nouvelle recherche
+                </a>
+                <a th:href="@{/public/concours}" class="btn btn-outline-success btn-action" th:if="${candidature.statut == 'REJETEE'}">
+                    <i class="fas fa-trophy me-2"></i>Autres concours
+                </a>
+                <a th:href="@{/public/candidature}" class="btn btn-primary btn-action">
+                    <i class="fas fa-plus me-2"></i>Nouvelle candidature
+                </a>
+                <a th:href="@{/public/}" class="btn btn-outline-secondary btn-action">
+                    <i class="fas fa-home me-2"></i>Retour à l'accueil
+                </a>
+            </div>
+
+            <!-- Informations de contact -->
+            <div class="card info-card mt-4">
+                <div class="info-card-header">
+                    <i class="fas fa-phone me-2"></i>Besoin d'aide ?
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><i class="fas fa-envelope me-2 text-primary"></i> <strong>Email :</strong> concours@mef.gov.ma</p>
+                            <p><i class="fas fa-phone me-2 text-primary"></i> <strong>Téléphone :</strong> +212 5 37 67 XX XX</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><i class="fas fa-clock me-2 text-primary"></i> <strong>Horaires :</strong> 8h-16h (Lun-Ven)</p>
+                            <p><i class="fas fa-map-marker-alt me-2 text-primary"></i> <strong>Adresse :</strong> Ministère de l'économie et des finances, Rabat</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pied de page -->
+<footer style="background-color: #2c3e50; color: white; padding: 2rem 0; margin-top: 3rem;">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2025 Ministère de l'économie et des finances. Tous droits réservés.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Animation d'entrée progressive
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.info-card');
+        const container = document.querySelector('.details-container');
+
+        // Animation du container principal
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            container.style.transition = 'all 0.6s ease';
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+        }, 100);
+
+        // Animation en cascade des cartes
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(-20px)';
+
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateX(0)';
+            }, 300 + (index * 100));
+        });
+
+        // Auto-refresh pour les candidatures en attente (toutes les 5 minutes)
+        const statut = document.querySelector('.statut-badge').classList.contains('statut-EN_ATTENTE');
+        if (statut) {
+            setInterval(() => {
+                // Optionnel: recharger automatiquement la page pour vérifier les mises à jour
+                // window.location.reload();
+            }, 300000); // 5 minutes
+        }
+    });
+</script>
+</body>
+</html>

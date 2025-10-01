@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails de Candidature - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .details-container {
+            max-width: 900px;
+            margin: 30px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .candidature-header {
+            background: linear-gradient(135deg, var(--bleu-mef), #0079d3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--bleu-mef);
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #212529;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            color: var(--bleu-mef);
+            border-bottom: 2px solid var(--bleu-mef);
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .btn-action {
+            margin: 5px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<!-- En-tête simplifié -->
+<header style="background-color: white; padding: 15px 0; border-bottom: 1px solid #e0e0e0;">
+    <div class="container">
+        <div class="d-flex align-items-center">
+            <img src="https://imgs.search.brave.com/_sQmz83PoFynMn9wl0RNhXY0yh8yKwDM0fXEtyPgd3Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy9j/L2NiL01FRl9NT1JP/Q0NPLnBuZw"
+                 alt="Logo Ministère" style="height: 60px; margin-right: 15px;">
+            <div>
+                <h5 style="color: #0056b3; margin-bottom: 0;">Ministère de l'économie et des finances</h5>
+                <p style="margin-bottom: 0; color: #6c757d; font-size: 0.9rem;">Portail des Concours Administratifs</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Contenu principal -->
+<div class="container">
+    <div class="details-container">
+        <!-- En-tête de la candidature -->
+        <div class="candidature-header text-center">
+            <h2><i class="fas fa-file-alt me-2"></i>Détails de la Candidature</h2>
+            <h4 th:text="${candidature.numero}">CAND-20250827-A1B2</h4>
+
+            <!-- Badge de statut -->
+            <div class="mt-3">
+                <span th:switch="${candidature.statut}" class="status-badge">
+                    <span th:case="EN_ATTENTE" class="bg-warning">En attente de validation</span>
+                    <span th:case="VALIDE" class="bg-success">Validée</span>
+                    <span th:case="REJETE" class="bg-danger">Rejetée</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Informations personnelles -->
+        <div class="row mb-4">
+            <h5 class="section-title"><i class="fas fa-user me-2"></i>Informations personnelles</h5>
+
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-label">Nom complet</div>
+                    <div class="info-value" th:text="${candidature.candidatNom + ' ' + candidature.candidatPrenom}">Jean Dupont</div>
+
+                    <div class="info-label">CIN</div>
+                    <div class="info-value" th:text="${candidature.candidatCin}">AB123456</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" th:text="${candidature.candidatEmail}">jean.dupont@email.com</div>
+
+                    <div class="info-label">Téléphone</div>
+                    <div class="info-value" th:text="0694741597">06 12 34 56 78</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formation -->
+        <div class="row mb-4">
+            <h5 class="section-title"><i class="fas fa-graduation-cap me-2"></i>Formation</h5>
+
+            <div class="col-12">
+                <div class="info-card">
+                    <div class="info-label">Diplôme</div>
+                    <div class="info-value" th:text="${candidature.candidatDiplome}">Master en Informatique</div>
+
+                    <div class="info-label">Niveau d'études</div>
+                    <div class="info-value" th:text='Bac+5'>Bac+5</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Concours -->
+        <div class="row mb-4">
+            <h5 class="section-title"><i class="fas fa-trophy me-2"></i>Concours</h5>
+
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-label">Concours</div>
+                    <div class="info-value" th:text="${candidature.concoursTitre}">Ingénieur informatique</div>
+
+                    <div class="info-label">Référence</div>
+                    <div class="info-value" th:text="${candidature.concoursReference}">REF-2025-001</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="info-card">
+                    <div class="info-label">Spécialité</div>
+                    <div class="info-value" th:text="${candidature.specialiteLibelle}">Développement (DEV)</div>
+
+                    <div class="info-label">Centre d'examen</div>
+                    <div class="info-value" th:text="${candidature.centreCode + ' - ' + candidature.centreVille}">CENT-001 - Casablanca</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents (informations seulement) -->
+        <div class="row mb-4">
+            <h5 class="section-title"><i class="fas fa-file me-2"></i>Documents</h5>
+
+            <div class="col-12">
+                <div class="info-card">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Les documents joints (CV, CIN, Diplôme) ne sont pas visibles pour des raisons de sécurité.
+                        Ils seront vérifiés par l'administration lors du traitement de votre candidature.
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-pdf text-danger me-2 fa-2x"></i>
+                                <div>
+                                    <div class="fw-bold">CV</div>
+                                    <small class="text-muted">Document joint</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-pdf text-danger me-2 fa-2x"></i>
+                                <div>
+                                    <div class="fw-bold">Copie CIN</div>
+                                    <small class="text-muted">Document joint</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-pdf text-danger me-2 fa-2x"></i>
+                                <div>
+                                    <div class="fw-bold">Diplôme</div>
+                                    <small class="text-muted">Document joint</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="text-center mt-4">
+            <a th:href="@{/public/suivi}" class="btn btn-primary btn-action">
+                <i class="fas fa-search me-2"></i>Suivre l'état
+            </a>
+
+            <a th:href="@{/public/}" class="btn btn-outline-secondary btn-action">
+                <i class="fas fa-home me-2"></i>Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Pied de page -->
+<footer style="background-color: #2c3e50; color: white; padding: 2rem 0; margin-top: 3rem;">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2025 Ministère de l'économie et des finances. Tous droits réservés.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

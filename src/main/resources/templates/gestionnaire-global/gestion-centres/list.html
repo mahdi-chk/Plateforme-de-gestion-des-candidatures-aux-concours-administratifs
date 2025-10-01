@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Centres d'Examen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .page-title {
+            color: #0056b3;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: #e9ecef;
+            font-weight: 500;
+        }
+
+        .btn-mef {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+            color: white;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+<div class="container my-4">
+    <h2 class="page-title">
+        <i class="fas fa-building me-2"></i>Gestion des Centres d'Examen
+    </h2>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Filtres avancés -->
+    <form method="get" th:action="@{/gestionnaire-global/gestion-centres/list}" class="card mb-4 p-3">
+        <input type="hidden" name="page" th:value="${currentPage}">
+        <input type="hidden" name="size" th:value="${pageSize}">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Ville :</label>
+                <select class="form-select" name="ville">
+                    <option value="">-- Toutes --</option>
+                    <option th:each="v : ${villes}" th:value="${v.id}" th:text="${v.nom}" 
+                            th:selected="${v.id == villeId}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Spécialité :</label>
+                <select class="form-select" name="specialite">
+                    <option value="">-- Toutes --</option>
+                    <option th:each="s : ${specialites}" th:value="${s.id}" th:text="${s.libelle}"
+                            th:selected="${s.id == specialiteId}"></option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex justify-content-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search me-1"></i> Filtrer
+                </button>
+                <a th:href="@{/gestionnaire-global/gestion-centres/add}" class="btn btn-mef">
+                    <i class="fas fa-plus me-1"></i> Nouveau Centre
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Tableau des centres -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            Liste des Centres
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Code</th>
+                    <th>Ville</th>
+                    <th>Capacité</th>
+                    <th>Spécialités</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="centre, i : ${centres.content}" th:if="${centres != null and centres.hasContent()}">
+                    <td th:text="${i.index + 1}"></td>
+                    <td th:text="${centre.code}"></td>
+                    <td th:text="${centre.villeNom}"></td>
+                    <td th:text="${centre.capacite}"></td>
+                    <td>
+                        <span th:each="spec, iterStat : ${centre.specialites}" 
+                              th:text="${spec.libelle + (iterStat.last ? '' : ', ')}"></span>
+                    </td>
+                    <td>
+                        <span th:if="${centre.actif}" class="badge bg-success">Actif</span>
+                        <span th:if="${!centre.actif}" class="badge bg-secondary">Inactif</span>
+                    </td>
+                    <td>
+                        <a th:href="@{'/gestionnaire-global/gestion-centres/edit/' + ${centre.id}}" class="btn btn-sm btn-outline-primary me-1">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form th:action="@{'/gestionnaire-global/gestion-centres/delete/' + ${centre.id}}" method="post" class="d-inline"
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce centre ?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:unless="${centres != null and centres.hasContent()}">
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-info-circle me-2"></i>Aucun centre trouvé.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${centres != null and centres.totalPages > 1}" aria-label="Navigation des pages" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${centres.first} ? 'disabled'">
+                <a class="page-link" th:href="@{/gestionnaire-global/gestion-centres/list(page=${currentPage - 1}, size=${pageSize}, ville=${villeId}, specialite=${specialiteId})}">
+                    Précédent
+                </a>
+            </li>
+
+            <li th:each="i : ${#numbers.sequence(0, centres.totalPages - 1)}"
+                class="page-item" th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{/gestionnaire-global/gestion-centres/list(page=${i}, size=${pageSize}, ville=${villeId}, specialite=${specialiteId})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${centres.last} ? 'disabled'">
+                <a class="page-link" th:href="@{/gestionnaire-global/gestion-centres/list(page=${currentPage + 1}, size=${pageSize}, ville=${villeId}, specialite=${specialiteId})}">
+                    Suivant
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="text-center mt-4">
+        <a th:href="@{/gestionnaire-global/dashboard}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<header th:fragment="header" class="ministere-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="https://imgs.search.brave.com/_sQmz83PoFynMn9wl0RNhXY0yh8yKwDM0fXEtyPgd3Y/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy9j/L2NiL01FRl9NT1JP/Q0NPLnBuZw"
+                 alt="Logo Ministère" style="height: 90px; margin-right: 15px;">
+            <div>
+                <h4 class="mb-0" style="color: var(--ministere-blue);">Ministère de l'économie et des finances</h4>
+                <p class="mb-0 text-muted">Portail des Concours Administratifs</p>
+            </div>
+        </div>
+        <div class="d-none d-md-block">
+            <a th:href="@{/public/suivi}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-search me-1"></i> Suivi
+            </a>
+            <a th:href="@{/public/candidature}" class="btn btn-primary">
+                <i class="fas fa-file-alt me-1"></i> Postuler
+            </a>
+        </div>
+    </div>
+</header>
+</body>
+</html>

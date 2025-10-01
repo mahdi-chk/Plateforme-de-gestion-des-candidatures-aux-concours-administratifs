@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails du Concours - MEF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+        }
+
+        .details-container {
+            max-width: 900px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--bleu-mef);
+            margin-bottom: 30px;
+        }
+
+        .detail-card {
+            border-left: 4px solid var(--bleu-mef);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .detail-value {
+            color: #212529;
+        }
+
+        .badge-status {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            margin-right: 10px;
+        }
+
+        .btn-mef:hover {
+            background-color: #003f80;
+            color: white;
+        }
+
+        .btn-outline-mef {
+            background-color: white;
+            color: var(--bleu-mef);
+            border: 1px solid var(--bleu-mef);
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        .btn-outline-mef:hover {
+            background-color: var(--bleu-mef);
+            color: white;
+        }
+
+        .conditions-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .conditions-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .conditions-list li:before {
+            content: "•";
+            color: var(--bleu-mef);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        .pre-formatted {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container details-container">
+    <h2><i class="fas fa-info-circle me-2"></i>Détails du Concours</h2>
+
+    <!-- Informations générales -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="detail-card">
+                <h4 class="mb-3" th:text="${concours.titre}">Titre du concours</h4>
+                <div class="mb-2">
+                    <span class="detail-label">Référence: </span>
+                    <span class="detail-value" th:text="${concours.reference}">REF-123</span>
+                </div>
+                <div class="mb-2">
+                    <span class="detail-label">Statut: </span>
+                    <span th:if="${concours.publie}" class="badge bg-success badge-status">Publié</span>
+                    <span th:unless="${concours.publie}" class="badge bg-secondary badge-status">Brouillon</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dates importantes -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="detail-card">
+                <h5 class="detail-label">Date d'ouverture</h5>
+                <p class="detail-value" th:text="${#temporals.format(concours.dateOuverture, 'dd/MM/yyyy')}">01/01/2023</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="detail-card">
+                <h5 class="detail-label">Date de clôture</h5>
+                <p class="detail-value" th:text="${#temporals.format(concours.dateCloture, 'dd/MM/yyyy')}">31/01/2023</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="detail-card">
+                <h5 class="detail-label">Date du concours</h5>
+                <p class="detail-value" th:text="${#temporals.format(concours.dateConcours, 'dd/MM/yyyy')}">15/02/2023</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Postes -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="detail-card">
+                <h5 class="detail-label">Nombre total de postes</h5>
+                <p class="detail-value" th:text="${concours.nbPostes}">50</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spécialités -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="detail-card">
+                <h5 class="detail-label mb-3">Spécialités et nombre de postes par spécialité</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>Spécialité</th>
+                            <th>Nombre de postes</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="specialite : ${concours.specialites}">
+                            <td th:text="${specialite.libelle}">Informatique</td>
+                            <td th:text="${concours.nbPostes / #lists.size(concours.specialites)}">25</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Conditions de participation -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="detail-card">
+                <h5 class="detail-label">Conditions de participation</h5>
+                <!-- Affichage des conditions stockées comme chaîne avec séparateurs de ligne -->
+                <div th:if="${concours.conditions != null and not #strings.isEmpty(concours.conditions)}">
+                    <ul class="conditions-list">
+                        <li th:each="conditionLine : ${#strings.arraySplit(concours.conditions, T(java.lang.Character).toString(10))}">
+                            <span th:text="${#strings.trim(conditionLine)}"></span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Fallback si les conditions sont vides -->
+                <div th:if="${concours.conditions == null or #strings.isEmpty(concours.conditions)}" class="text-muted">
+                    Aucune condition spécifiée
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="row mt-4">
+        <div class="col-md-12 text-center">
+            <a th:href="@{/public/candidature}" class="btn btn-primary me-2">
+                <i class="fas fa-file-alt me-1"></i> Postuler
+            </a>
+            <a th:href="@{/public/}" class="btn btn-outline-mef">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

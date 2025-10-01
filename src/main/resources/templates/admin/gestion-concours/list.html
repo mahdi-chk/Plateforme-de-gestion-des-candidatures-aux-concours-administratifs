@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des concours</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bleu-mef: #0056b3;
+            --gris-fond: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--gris-fond);
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--bleu-mef);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--bleu-mef);
+            padding-bottom: 15px;
+        }
+
+        .btn-mef {
+            background-color: var(--bleu-mef);
+            color: white;
+            font-weight: 500;
+            border: none;
+        }
+
+        .btn-mef:hover {
+            background-color: #004494;
+            color: white;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .badge {
+            font-size: 0.85em;
+            padding: 0.5em 0.75em;
+        }
+
+        .nowrap {
+            white-space: nowrap;
+        }
+
+        .alert {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .action-buttons .btn {
+            margin-right: 5px;
+            border-radius: 4px;
+        }
+
+        .action-buttons .btn:last-child {
+            margin-right: 0;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.35rem 0.65rem;
+        }
+
+        .table th {
+            background-color: var(--bleu-mef);
+            color: white;
+            vertical-align: middle;
+            font-weight: 500;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .pagination {
+            margin-bottom: 0;
+        }
+
+        .results-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .card-header {
+            background-color: #f1f7ff !important;
+            font-weight: 600;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 15px;
+            }
+
+            .action-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .action-buttons .btn {
+                margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container page-container">
+    <h2><i class="fas fa-trophy me-2"></i>Gestion des concours</h2>
+
+    <div class="d-flex justify-content-between mb-4 flex-wrap gap-2">
+        <a th:href="@{/admin/dashboard}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour au tableau de bord
+        </a>
+        <a th:href="@{/admin/concours/add}" class="btn btn-success">
+            <i class="fas fa-plus me-1"></i> Nouveau concours
+        </a>
+    </div>
+
+    <!-- Messages d'alerte -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Section de filtres -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtres de recherche</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/admin/concours/list}" method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="searchInput" class="form-label">Recherche</label>
+                    <input type="text" class="form-control" id="searchInput" name="search"
+                           th:value="${param.search}" placeholder="Référence ou titre...">
+                </div>
+
+                <div class="col-md-3">
+                    <label for="statusSelect" class="form-label">Statut</label>
+                    <select class="form-select" id="statusSelect" name="statut">
+                        <option value="">Tous les statuts</option>
+                        <option value="true" th:selected="${param.statut == 'true'}">Publié</option>
+                        <option value="false" th:selected="${param.statut == 'false'}">Brouillon</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="pageSizeSelect" class="form-label">Éléments par page</label>
+                    <select class="form-select" id="pageSizeSelect" name="size" onchange="this.form.submit()">
+                        <option value="5" th:selected="${param.size == '5'}">5</option>
+                        <option value="10" th:selected="${param.size == '10' or param.size == null}">10</option>
+                        <option value="20" th:selected="${param.size == '20'}">20</option>
+                        <option value="50" th:selected="${param.size == '50'}">50</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-mef">
+                        <i class="fas fa-search me-1"></i> Appliquer
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3 d-flex flex-wrap align-items-center gap-2">
+                <span class="badge bg-primary">
+                    <span th:text="${totalElements != null ? totalElements : 0}">0</span> concours au total
+                </span>
+                <span class="badge bg-success">
+                    <span th:text="${concoursList != null ? #lists.size(concoursList) : 0}">0</span> concours correspondants
+                </span>
+
+                <a th:href="@{/admin/concours/list}" class="btn btn-outline-secondary btn-sm ms-auto">
+                    <i class="fas fa-refresh me-1"></i> Réinitialiser
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des concours -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>Référence</th>
+                <th>Titre</th>
+                <th>Date ouverture</th>
+                <th>Date clôture</th>
+                <th>Date concours</th>
+                <th class="text-center">Postes</th>
+                <th>Statut</th>
+                <th class="text-center nowrap">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Afficher les concours -->
+            <tr th:each="concours : ${concoursList}"
+                th:class="${concours.publie} ? 'table-success' : ''">
+                <td th:text="${'REF-'+concours.id}" class="fw-bold">REF-001</td>
+                <td th:text="${concours.titre}">Titre du concours</td>
+                <td th:text="${#temporals.format(concours.dateOuverture, 'dd/MM/yyyy')}">01/01/2024</td>
+                <td th:text="${#temporals.format(concours.dateCloture, 'dd/MM/yyyy')}">31/12/2024</td>
+                <td th:text="${#temporals.format(concours.dateConcours, 'dd/MM/yyyy')}">15/01/2025</td>
+                <td th:text="${concours.nbPostes}" class="text-center fw-bold">10</td>
+                <td>
+                    <span th:if="${concours.publie}" class="badge bg-success status-badge">Publié</span>
+                    <span th:unless="${concours.publie}" class="badge bg-secondary status-badge">Brouillon</span>
+                </td>
+                <td class="text-center">
+                    <div class="action-buttons d-flex justify-content-center">
+                        <a th:href="@{'/admin/concours/edit/' + ${concours.id}}"
+                           class="btn btn-sm btn-outline-primary" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <form th:action="@{'/admin/concours/delete/' + ${concours.id}}" method="post"
+                              style="display: inline-block;"
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ce concours ?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+
+                        <a th:href="@{'/admin/concours/details/' + ${concours.id}}"
+                           class="btn btn-sm btn-outline-info" title="Voir détails">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- Message si aucun concours trouvé -->
+            <tr th:if="${concoursList == null or #lists.isEmpty(concoursList)}">
+                <td colspan="8" class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <h5 class="text-muted">Aucun concours trouvé</h5>
+                    <p th:if="${param.search != null or param.statut != null}" class="mt-2">
+                        Essayez de modifier vos critères de recherche ou
+                        <a th:href="@{/admin/concours/list}" class="text-decoration-none">réinitialiser les filtres</a>
+                    </p>
+                    <p th:unless="${param.search != null or param.statut != null}" class="mt-2">
+                        Il n'y a aucun concours dans le système pour le moment.
+                    </p>
+                    <a th:href="@{/admin/concours/add}" class="btn btn-mef mt-3">
+                        <i class="fas fa-plus me-1"></i> Créer le premier concours
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <nav th:if="${totalPages > 1}" aria-label="Page navigation" class="mt-4 d-flex justify-content-between align-items-center flex-wrap">
+        <div class="results-count mb-2 mb-md-0">
+            Page <span th:text="${currentPage}">1</span> sur <span th:text="${totalPages}">1</span>
+            - <span th:text="${totalElements}">0</span> résultats
+        </div>
+
+        <ul class="pagination justify-content-center mb-0">
+            <!-- Previous page -->
+            <li class="page-item" th:class="${currentPage == 1} ? 'disabled' : ''">
+                <a class="page-link"
+                   th:href="${currentPage == 1} ? '#' :
+                   @{'/admin/concours/list?page=' + (currentPage - 2) + '&size=' + pageSize +
+                   (param.search != null ? '&search=' + param.search : '') +
+                   (param.statut != null ? '&statut=' + param.statut : '')}">
+                    &laquo; Précédent
+                </a>
+            </li>
+
+            <!-- Page numbers -->
+            <li th:each="i : ${#numbers.sequence(1, totalPages)}"
+                class="page-item"
+                th:class="${i == currentPage} ? 'active' : ''">
+                <a class="page-link"
+                   th:href="@{'/admin/concours/list?page=' + (i - 1) + '&size=' + pageSize +
+                   (param.search != null ? '&search=' + param.search : '') +
+                   (param.statut != null ? '&statut=' + param.statut : '')}"
+                   th:text="${i}">1</a>
+            </li>
+
+            <!-- Next page -->
+            <li class="page-item" th:class="${currentPage == totalPages} ? 'disabled' : ''">
+                <a class="page-link"
+                   th:href="${currentPage == totalPages} ? '#' :
+                   @{'/admin/concours/list?page=' + (currentPage) + '&size=' + pageSize +
+                   (param.search != null ? '&search=' + param.search : '') +
+                   (param.statut != null ? '&statut=' + param.statut : '')}">
+                    Suivant &raquo;
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Script pour s'assurer que les données sont chargées au premier accès
+    document.addEventListener('DOMContentLoaded', function() {
+        // Si la page est chargée sans paramètres, on déclenche une recherche vide
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('search') && !urlParams.has('statut')) {
+            // On pourrait éventuellement déclencher une requête AJAX ici
+            // ou simplement s'assurer que le tableau se charge correctement
+            console.log("Chargement initial de la liste des concours");
+        }
+
+        // Ajouter des tooltips Bootstrap pour les boutons d'action
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+</body>
+</html>
