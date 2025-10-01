@@ -22,7 +22,7 @@ Développée avec **Spring Boot**, **Spring Security (JWT)**, **Thymeleaf** et *
 
 ## 🛠️ Technologies utilisées
 - **Back-end** : Spring Boot, Spring Security (JWT), Spring Data JPA, Hibernate  
-- **Base de données** : MySQL / PostgreSQL  
+- **Base de données** : MySQL 
 - **Front-end** : Thymeleaf, HTML5, CSS3, JavaScript  
 - **Outils de build** : Maven  
 - **Gestion des versions** : Git / GitHub  
